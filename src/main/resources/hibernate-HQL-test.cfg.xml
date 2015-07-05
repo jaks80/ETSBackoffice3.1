@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+  <session-factory>
+    
+    <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+    <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+    <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/etsbackoffice?zeroDateTimeBehavior=convertToNull</property>
+    <property name="hibernate.connection.username">root</property>
+    <property name="hibernate.connection.password">ets215</property>
+    
+    
+    <!--
+    <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+    <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+    <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/etsbackoffice</property>
+    <property name="hibernate.connection.username">postgres</property>
+    <property name="hibernate.connection.password">ets215</property>
+    -->
+    <mapping class="com.ets.PersistentObject" package="com.ets"/>   
+    <mapping class="com.ets.pnr.domain.Pnr" package="com.ets.pnr.domain"/>
+    <mapping class="com.ets.pnr.domain.Ticket" package="com.ets.pnr.domain"/>
+    <mapping class="com.ets.pnr.domain.Itinerary" package="com.ets.pnr.domain"/>
+    <mapping class="com.ets.pnr.domain.Remark" package="com.ets.pnr.domain"/>  
+    <mapping class="com.ets.pnr.domain.Airline" package="com.ets.pnr.domain"/>        
+    <mapping class="com.ets.pnr.domain.Parent" package="com.ets.pnr.domain"/>        
+    <mapping class="com.ets.pnr.domain.Children" package="com.ets.pnr.domain"/>        
+    
+    <mapping class="com.ets.otherservice.domain.Category" package="com.ets.otherservice.domain"/>        
+    <mapping class="com.ets.otherservice.domain.OtherService" package="com.ets.otherservice.domain"/>        
+    
+    <mapping class="com.ets.otherservice.domain.OtherService" package="com.ets.otherservice.domain"/>
+    <mapping class="com.ets.otherservice.domain.AdditionalCharge" package="com.ets.otherservice.domain"/>
+    
+    <mapping class="com.ets.client.domain.Customer" package="com.ets.client.domain"/>
+    <mapping class="com.ets.client.domain.Agent" package="com.ets.client.domain"/>        
+    <mapping class="com.ets.client.domain.Contactable" package="com.ets.client.domain"/>        
+    
+    <mapping class="com.ets.accountingdoc.domain.AccountingDocument" package="com.ets.accountingdoc.domain"/>        
+    <mapping class="com.ets.accountingdoc.domain.OtherSalesAcDoc" package="com.ets.accountingdoc.domain"/>        
+    <mapping class="com.ets.accountingdoc.domain.TicketingPurchaseAcDoc" package="com.ets.accountingdoc.domain"/>        
+    <mapping class="com.ets.accountingdoc.domain.TicketingSalesAcDoc" package="com.ets.accountingdoc.domain"/>        
+    <mapping class="com.ets.accountingdoc.domain.AccountingDocumentLine" package="com.ets.accountingdoc.domain"/>
+    <mapping class="com.ets.accountingdoc.domain.AdditionalChargeLine" package="com.ets.accountingdoc.domain"/>  
+    <mapping class="com.ets.accountingdoc.domain.Payment" package="com.ets.accountingdoc.domain"/>        
+    
+    <mapping class="com.ets.hqltest.TicketingSalesAcDoc1" package="com.ets.hqltest"/>
+        
+  </session-factory>
+</hibernate-configuration>

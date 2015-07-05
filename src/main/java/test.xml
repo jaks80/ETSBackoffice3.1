@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<payment>
+    <id>294912</id>
+    <createdOn>2015-05-16T00:00:00+01:00</createdOn>
+    <createdBy>
+        <id>2</id>
+        <loginID>admin</loginID>
+        <password>1234</password>
+        <surName>Admin</surName>
+        <foreName>Admin</foreName>
+        <userType>AD</userType>
+        <active>true</active>
+    </createdBy>
+    <remark>cash(550.00)</remark>
+    <tSalesAcDocuments>
+        <id>327682</id>
+        <createdOn>2015-05-16T00:00:00+01:00</createdOn>
+        <createdBy>
+            <id>2</id>
+            <loginID>admin</loginID>
+            <password>1234</password>
+            <surName>Admin</surName>
+            <foreName>Admin</foreName>
+            <userType>AD</userType>
+            <active>true</active>
+        </createdBy>
+        <docIssueDate>2015-05-16T00:00:00+01:00</docIssueDate>
+        <type>PAYMENT</type>
+        <reference>1006</reference>
+        <version>6</version>
+        <status>VOID</status>
+        <documentedAmount>-395.00</documentedAmount>
+        <remark>Batch payment: 550.00</remark>
+        <pnr>
+            <id>393216</id>
+            <createdOn>2015-05-15T00:00:00+01:00</createdOn>
+            <lastModified>2015-05-15T00:00:00+01:00</lastModified>
+            <createdBy>
+                <id>2</id>
+                <loginID>admin</loginID>
+                <password>1234</password>
+                <surName>Admin</surName
