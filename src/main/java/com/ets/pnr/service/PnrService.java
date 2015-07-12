@@ -57,6 +57,16 @@ public class PnrService {
         return list;
     }
 
+    public List<Pnr> getByTktNo(String ticketNo) {
+        List<Pnr> list = new ArrayList<>();
+        list = dao.getByTktNo(ticketNo);
+        for (Pnr p : list) {
+            PnrUtil.undefinePnrInTickets(p, p.getTickets());
+        }
+        return list;
+    }
+
+    
     public List<Pnr> getByInvRef(String invref) {
         List<Pnr> list = new ArrayList<>();
         list = dao.getByInvRef(invref);

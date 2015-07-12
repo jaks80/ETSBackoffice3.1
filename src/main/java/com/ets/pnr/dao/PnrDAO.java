@@ -16,7 +16,7 @@ public interface PnrDAO extends GenericDAO<Pnr, Long> {
 
     public Set<String> findTicketingOIDs();
     
-    public List<Pnr> searchByTktNo(String tktNo);
+    public List<Pnr> getByTktNo(String tktNo);
 
     public List<Pnr> getByGDSPnr(String gdsPnr);
     

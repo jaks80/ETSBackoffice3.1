@@ -5,6 +5,7 @@ import com.ets.accountingdoc_o.dao.*;
 import com.ets.accountingdoc_o.model.*;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.accountingdoc.service.AcDocUtil;
+import com.ets.exception.ClientNotFoundException;
 import com.ets.settings.domain.User;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
@@ -26,12 +27,16 @@ public class OSalesAcDocService {
     @Resource(name = "accountingDocumentLineDAO")
     private AccountingDocumentLineDAO lineDao;
 
-    public synchronized OtherSalesAcDoc newDocument(OtherSalesAcDoc doc) {
+    public synchronized OtherSalesAcDoc newDocument(OtherSalesAcDoc doc) throws ClientNotFoundException {
 
+        if(doc.getAgent() == null && doc.getCustomer() == null){
+            throw new ClientNotFoundException("##Agent/Customer needed##");
+        }
+        
         if (doc.getReference() == null && doc.getType().equals(Enums.AcDocType.INVOICE)) {
-            if (doc.getReference() == null) {
+            //if (doc.getReference() == null) {
                 doc.setReference(AcDocUtil.generateAcDocRef(dao.getNewAcDocRef()));
-            }
+            //}
         }
 
         if (doc.getAdditionalChargeLines() != null && !doc.getAdditionalChargeLines().isEmpty()) {

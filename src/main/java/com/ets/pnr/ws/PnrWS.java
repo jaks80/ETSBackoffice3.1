@@ -7,7 +7,6 @@ import com.ets.pnr.service.PnrService;
 import com.ets.util.DateUtil;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -91,10 +90,13 @@ public class PnrWS {
     }
 
     @GET
-    @Path("/bytkt/{tktNo}/{surName}")
+    @Path("/byticketno")
     @RolesAllowed("GS")
-    public Pnrs getPnrByTktNo(@QueryParam("tktNo") String tktNo, @QueryParam("surName") String surName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Pnrs getPnrByTktNo(@QueryParam("ticketNo") String ticketNo) {
+        List<Pnr> list = service.getByTktNo(ticketNo);
+        Pnrs pnrs = new Pnrs();
+        pnrs.setList(list);
+        return pnrs;
     }
 
     @GET

@@ -1,11 +1,9 @@
 package com.ets.accountingdoc_o.ws;
 
-import com.ets.accountingdoc_o.model.OtherSalesAcDocs;
+import com.ets.accountingdoc_o.model.*;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
-import com.ets.accountingdoc_o.model.InvoiceReportOther;
-import com.ets.accountingdoc_o.model.OtherInvoiceModel;
-import com.ets.accountingdoc_o.model.ServicesSaleReport;
 import com.ets.accountingdoc_o.service.OSalesAcDocService;
+import com.ets.exception.ClientNotFoundException;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
@@ -33,7 +31,7 @@ public class OtherSalesAcDocWS {
     @POST
     @Path("/new")
     @RolesAllowed("GS")
-    public OtherSalesAcDoc create(OtherSalesAcDoc doc) {
+    public OtherSalesAcDoc create(OtherSalesAcDoc doc) throws ClientNotFoundException {
         return service.newDocument(doc);
     }
 

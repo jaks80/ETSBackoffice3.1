@@ -171,8 +171,35 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
     }
 
     @Override
-    public List<Pnr> searchByTktNo(String tktNo) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    @Transactional(readOnly = true)
+    public List<Pnr> getByTktNo(String ticketNo) {
+        String hql = "select t,p from Ticket t "
+                + "inner join t.pnr as p "
+                + "where t.ticketNo = :ticketNo "
+                + "group by p.id";
+
+        Query query = getSession().createQuery(hql);
+        query.setParameter("ticketNo", ticketNo);
+        List results = query.list();
+        Iterator it = results.iterator();
+        List<Pnr> list = new ArrayList<>();
+
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+            Ticket leadPaxTicket = (Ticket) objects[0];
+            Pnr pnr = (Pnr) objects[1];
+            pnr.setSegments(null);
+            pnr.setRemarks(null);
+            pnr.setAgent(null);
+            pnr.setCustomer(null);
+            pnr.setTicketing_agent(null);
+            Set<Ticket> tickets = new LinkedHashSet<>();
+            tickets.add(leadPaxTicket);
+            pnr.setTickets(tickets);
+            list.add(pnr);
+        }
+
+        return list;
     }
 
     @Override
@@ -281,7 +308,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
     @Override
     @Transactional(readOnly = true)
     public Set<String> findTicketingOIDs() {
-        String hql = "select p.ticketingAgtOid from Pnr p group by p.ticketingAgtOid";
+        String hql = "select p.ticketingAgtOid from Pnr p where p.ticketingAgtOid is not null group by p.ticketingAgtOid";
         Query query = getSession().createQuery(hql);
         List results = query.list();
         return new HashSet<>(results);

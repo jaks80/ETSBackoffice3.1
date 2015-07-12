@@ -64,7 +64,7 @@ public class TicketService {
             airLineCodes = airLineCode.split(",");
         }
 
-            if (ticketingAgtOid != null) {
+        if (ticketingAgtOid != null) {
             tktedOIDs = ticketingAgtOid.split(",");
         } else {
             if (ticketingType.equals(Enums.TicketingType.IATA)) {
@@ -74,9 +74,9 @@ public class TicketService {
                 Set<String> oidset = pnrService.findTicketingOIDs();//All tkting oid
                 //Remove Main agent office ids
                 Iterator<String> sit = oidset.iterator();
-                while (sit.hasNext()) {                    
+                while (sit.hasNext()) {
                     if (mainagentoid.matches(sit.next())) {
-                        sit.remove();                       
+                        sit.remove();
                     }
                 }
 
@@ -90,7 +90,7 @@ public class TicketService {
         return report;
     }
 
-    public TicketSaleReport saleRevenueReport(Long userid,Enums.TicketingType ticketingType, 
+    public TicketSaleReport saleRevenueReport(Long userid, Enums.TicketingType ticketingType,
             Enums.TicketStatus ticketStatus, String airLineCode,
             Date issueDateFrom, Date issueDateTo, String ticketingAgtOid) {
 
@@ -105,7 +105,7 @@ public class TicketService {
             tktedOIDs = ticketingAgtOid.split(",");
         }
 
-        List<Ticket> tickets = dao.saleRevenueReport(userid,ticketStatus, airLineCodes, issueDateFrom, issueDateTo, tktedOIDs);
+        List<Ticket> tickets = dao.saleRevenueReport(userid, ticketStatus, airLineCodes, issueDateFrom, issueDateTo, tktedOIDs);
         TicketSaleReport report = TicketSaleReport.serializeToSalesSummery(tickets, issueDateFrom, issueDateTo);
         report.setReportTitle("Sale Report: AIR Ticket");
         return report;

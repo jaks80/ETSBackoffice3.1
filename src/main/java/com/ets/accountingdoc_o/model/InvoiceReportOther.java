@@ -86,7 +86,7 @@ public class InvoiceReportOther implements Serializable {
 
             if (invoice.getAgent() != null) {
                 invSummery.setClientName(invoice.getAgent().getName());
-            } else {
+            } else if(invoice.getCustomer()!= null){
                 invSummery.setClientName(invoice.getCustomer().calculateFullName());
             }
             
