@@ -1,5 +1,6 @@
 package com.ets.settings.ws;
 
+import com.ets.exception.InvalidLoginException;
 import com.ets.settings.domain.User;
 import com.ets.settings.domain.Users;
 import com.ets.settings.service.UserService;
@@ -27,7 +28,7 @@ public class UserWS {
     @POST
     @Path("/login")
     @PermitAll
-    public User login(User user) {        
+    public User login(User user) throws InvalidLoginException {        
             
         user = service.login(user.getLoginID(), user.getPassword(), user.getNewPassword());
         return user;

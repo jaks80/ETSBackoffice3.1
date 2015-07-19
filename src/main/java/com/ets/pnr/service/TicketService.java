@@ -92,7 +92,8 @@ public class TicketService {
 
     public TicketSaleReport saleRevenueReport(Long userid, Enums.TicketingType ticketingType,
             Enums.TicketStatus ticketStatus, String airLineCode,
-            Date issueDateFrom, Date issueDateTo, String ticketingAgtOid) {
+            Date issueDateFrom, Date issueDateTo, Enums.ClientType clienttype,
+            Long clientid,String ticketingAgtOid) {
 
         String[] tktedOIDs = null;
         String[] airLineCodes = null;
@@ -105,7 +106,8 @@ public class TicketService {
             tktedOIDs = ticketingAgtOid.split(",");
         }
 
-        List<Ticket> tickets = dao.saleRevenueReport(userid, ticketStatus, airLineCodes, issueDateFrom, issueDateTo, tktedOIDs);
+        List<Ticket> tickets = dao.saleRevenueReport(userid, ticketStatus, airLineCodes, issueDateFrom,
+                issueDateTo,clienttype,clientid, tktedOIDs);
         TicketSaleReport report = TicketSaleReport.serializeToSalesSummery(tickets, issueDateFrom, issueDateTo);
         report.setReportTitle("Sale Report: AIR Ticket");
         return report;

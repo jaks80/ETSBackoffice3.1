@@ -94,13 +94,15 @@ public class TicketWS {
             @QueryParam("airLineCode") String airLineCode,
             @QueryParam("dateStart") String dateStart,
             @QueryParam("dateEnd") String dateEnd,
+            @QueryParam("clienttype") Enums.ClientType clienttype,
+            @QueryParam("clientid") Long clientid,
             @QueryParam("ticketingAgtOid") String ticketingAgtOid,
             @QueryParam("userid") Long userid) {
 
         Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
         Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
 
-        TicketSaleReport report = service.saleRevenueReport(userid,ticketingType, ticketStatus, airLineCode, dateFrom, dateTo, ticketingAgtOid);
+        TicketSaleReport report = service.saleRevenueReport(userid,ticketingType, ticketStatus, airLineCode, dateFrom, dateTo,clienttype,clientid, ticketingAgtOid);
         return report;
     }
 }

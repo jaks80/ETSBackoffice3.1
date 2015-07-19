@@ -1,5 +1,6 @@
 package com.ets.settings.service;
 
+import com.ets.exception.InvalidLoginException;
 import com.ets.security.Cryptography;
 import com.ets.security.LoginManager;
 import com.ets.settings.dao.UserDAO;
@@ -34,7 +35,7 @@ public class UserService {
         return operational_users;
     }
 
-    public User login(String loginId, String enc_password, String enc_newPassword) {
+    public User login(String loginId, String enc_password, String enc_newPassword) throws InvalidLoginException {
         
         String password = Cryptography.decryptString(enc_password);
         String newPassword = null;
@@ -55,7 +56,11 @@ public class UserService {
                 break;
             }
         }
-
+        
+        if(authenticatedUser == null){
+         throw new InvalidLoginException();
+        }
+        
         LoginManager.addLogin(authenticatedUser);
 
         if (authenticatedUser != null) {

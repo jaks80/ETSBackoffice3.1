@@ -1,12 +1,5 @@
 4. Ticketing OID and Sub agent OID break down.
 
-
-1. Issue date in INV coming wrong if file is created on later date.
-3. Save ticketing agent while saving new PNR
-
-Urgent before deployment:
-
-1. Main agent code in webservice url;
-2. CSV reading to import agents
-3. Report footer.
-4. Encrypt all passwords in db
+1. Email PW encryption
+2. Editing Other invoice
+3. Sale report filter by agent customer

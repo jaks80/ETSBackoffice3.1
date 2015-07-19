@@ -1,9 +1,7 @@
 package com.ets.pnr.dao;
 
 import com.ets.GenericDAOImpl;
-import com.ets.accountingdoc.dao.TPurchaseAcDocDAO;
 import com.ets.accountingdoc.dao.TSalesAcDocDAO;
-import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
 import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
 import com.ets.pnr.domain.Ticket;
 import com.ets.util.Enums;
@@ -153,10 +151,14 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
 
     @Override
     @Transactional(readOnly = true)
-    public List<Ticket> saleRevenueReport(Long userid, Enums.TicketStatus ticketStatus, String[] airLineCode, Date from, Date to, String... ticketingAgtOid) {
+    public List<Ticket> saleRevenueReport(Long userid, Enums.TicketStatus ticketStatus, String[] airLineCode, Date from, Date to, 
+            Enums.ClientType clienttype,Long clientid, String... ticketingAgtOid) {
+        
         String airLineCodeQuery = "";
         String ticketingAgtOidQuery = "";
         String userQuery = "";
+        String concatClient = "";
+        String clientcondition = "and (:clientid is null or client.id = :clientid) ";
 
         if (airLineCode != null) {
             airLineCodeQuery = "p.airLineCode in (:airLineCode) and ";
@@ -169,17 +171,26 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
             userQuery = "sdoc.createdBy.id =:userid and ";
         }
 
+        if (clienttype != null && clienttype.equals(Enums.ClientType.AGENT)) {
+            concatClient = "inner join fetch p.agent as client ";
+        } else if (clienttype != null && clienttype.equals(Enums.ClientType.CUSTOMER)) {
+            concatClient = "inner join fetch p.customer as client ";
+        } else {
+            concatClient = "left join fetch p.agent left join fetch p.customer ";
+            clientcondition = "";
+        }
+        
         String hql = "select distinct t from Ticket as t "
                 + "left join fetch t.pnr as p "
-                + "left join fetch p.agent as agt "
-                + "left join fetch p.customer as cust "
                 + "left join fetch p.ticketing_agent as vendor "
+                + concatClient
                 + "left join fetch t.ticketingSalesAcDoc as sdoc "
                 + "left join fetch t.ticketingPurchaseAcDoc "
                 + "where (t.tktStatus <> 0) and "
                 + airLineCodeQuery + ticketingAgtOidQuery + userQuery
                 + "t.docIssuedate >= :from and t.docIssuedate <= :to and "
                 + "(:ticketStatus is null or t.tktStatus = :ticketStatus) "
+                + clientcondition
                 + "order by t.id";
 
         Query query = getSession().createQuery(hql);
@@ -195,6 +206,10 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
 
         query.setParameter("from", from);
         query.setParameter("to", to);
+
+        if (!clientcondition.isEmpty()) {
+            query.setParameter("clientid", clientid);
+        }
 
         if (ticketingAgtOid != null) {
             query.setParameterList("ticketingAgtOid", ticketingAgtOid);
