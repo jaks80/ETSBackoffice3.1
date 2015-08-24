@@ -13,4 +13,8 @@ import java.util.List;
 public interface AccountingDocumentLineDAO extends GenericDAO<AccountingDocumentLine, Long>{
     
     public List<AccountingDocumentLine> findLineItems(Date from,Date to, Long categoryId, Long itemId,Enums.ClientType clienttype, Long clientid);
+    
+    public AccountingDocumentLine findByIdWithParent(Long id);
+    
+    public void deleteLine(Long id,Long userid);
 }

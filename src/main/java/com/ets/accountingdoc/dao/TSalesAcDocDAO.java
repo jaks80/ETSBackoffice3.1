@@ -2,6 +2,8 @@ package com.ets.accountingdoc.dao;
 
 import com.ets.GenericDAO;
 import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
@@ -35,6 +37,10 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
 
     public TicketingSalesAcDoc voidTicketedDocument(TicketingSalesAcDoc doc);
 
+    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to);
+    
+    public List<TicketingSalesAcDoc> findArchivedInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to);
+    
     public List<TicketingSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd);
 
     public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype, Long clientid, Date dateFrom, Date dateEnd);
@@ -48,4 +54,12 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
     public Map<User, BigDecimal> userProductivityReport(Date dateStart, Date dateEnd);
 
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
+    
+    public List<String> outstandingAgentsName();
+    
+    public List<String> outstandingCusotmersName();
+    
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType);
+    
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType);
 }

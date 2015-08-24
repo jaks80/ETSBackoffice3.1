@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service("customerDAO")
 @Transactional
-public class CustomerDAOImpl extends GenericDAOImpl<Customer, Long> implements CustomerDAO{
+public class CustomerDAOImpl extends GenericDAOImpl<Customer, Long> implements CustomerDAO {
 
     @Override
     public List<Customer> findByLike(String surName, String foreName, String postCode, String telNo) {
@@ -21,8 +21,10 @@ public class CustomerDAOImpl extends GenericDAOImpl<Customer, Long> implements C
         foreName = nullToEmptyValue(foreName).concat("%");
         postCode = nullToEmptyValue(postCode).concat("%");
         telNo = nullToEmptyValue(telNo).concat("%");
-        
+
         String hql = "from Customer c "
+                + "left join fetch c.createdBy "
+                + "left join fetch c.lastModifiedBy "
                 + "where "
                 + "(c.surName is null or c.surName like :surName) and "
                 + "(c.foreName is null or c.foreName like :foreName) and "
@@ -33,13 +35,42 @@ public class CustomerDAOImpl extends GenericDAOImpl<Customer, Long> implements C
         query.setParameter("foreName", foreName);
         query.setParameter("postCode", postCode);
         query.setParameter("telNo", telNo);
-        
+
         return query.list();
-    } 
+    }
 
     @Override
     public List findCustomerNameList() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
+    @Override
+    public List<Customer> findCustomerContainsEmail() {
+        String hql = "select cust from Customer as cust "
+                + "where "
+                + "cust.email is not null and cust.email <>''";
+        Query query = getSession().createQuery(hql);
+        return query.list();
+    }
+
+    @Override
+    public List<Customer> querySearch(String keyword) {
+        
+        keyword = nullToEmptyValue(keyword).concat("%");
+        
+        String hql = "from Customer c "
+                + "left join fetch c.createdBy "
+                + "left join fetch c.lastModifiedBy "
+                + "where "
+                + "c.surName like :keyword or "
+                + "c.foreName like :keyword or "
+                + "c.postCode like :keyword or "
+                + "c.email like :keyword or "
+                + "c.city like :keyword or "
+                + "c.telNo like :keyword ";
+        Query query = getSession().createQuery(hql);
+        query.setParameter("keyword", keyword);
+
+        return query.list();
+    }
 }

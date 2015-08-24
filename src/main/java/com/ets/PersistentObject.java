@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Column;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -100,7 +101,7 @@ public abstract class PersistentObject implements Serializable {
         this.id = id;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     public User getCreatedBy() {
         return createdBy;
@@ -110,7 +111,7 @@ public abstract class PersistentObject implements Serializable {
         this.createdBy = createdBy;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lastmodified_by")
     public User getLastModifiedBy() {
         return lastModifiedBy;

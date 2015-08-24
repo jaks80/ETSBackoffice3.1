@@ -8,9 +8,13 @@ import java.util.List;
  *
  * @author Yusuf
  */
-public interface CustomerDAO extends GenericDAO<Customer, Long>{
-    
-    public List<Customer> findByLike(String surName, String foreName, String postCode,String telNo);
+public interface CustomerDAO extends GenericDAO<Customer, Long> {
+
+    public List<Customer> findByLike(String surName, String foreName, String postCode, String telNo);
+
+    public List<Customer> querySearch(String keyword);
     
     public List findCustomerNameList();
+
+    public List<Customer> findCustomerContainsEmail();
 }

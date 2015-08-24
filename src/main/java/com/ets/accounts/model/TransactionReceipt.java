@@ -132,7 +132,7 @@ public class TransactionReceipt {
             reportTitle = "Billing Receipt";
             for (TicketingPurchaseAcDoc d : pdocs) {
                 TktingInvoiceSummery sum = new TktingInvoiceSummery();
-                sum.setId(d.getId());                
+                sum.setId(d.getId());
                 sum.setReference(d.getReference());
                 sum.setGdsPnr(d.getPnr().getGdsPnr());
                 sum.setAirLine(d.getPnr().getAirLineCode());
@@ -141,7 +141,7 @@ public class TransactionReceipt {
                 sum.setStatus(d.getStatus());
                 lines.add(sum);
                 total = total.add(d.getDocumentedAmount());
-                
+
                 if (d.getParent() != null) {
                     sum.setParentId(d.getParent().getId());
                     Set<Ticket> tickets = d.getParent().getTickets();
@@ -150,7 +150,7 @@ public class TransactionReceipt {
                         sum.setLeadPsgr(leadPax.getFullPaxName() + "/" + leadPax.getFullTicketNo());
                     }
                 }
-                
+
                 if (d.getPnr() != null && clientName == null) {
                     Pnr pnr = d.getPnr();
                     if (pnr.getTicketing_agent() != null) {
@@ -177,7 +177,7 @@ public class TransactionReceipt {
                 OtherInvoiceSummery sum = new OtherInvoiceSummery();
                 sum.setId(d.getId());
                 if (d.getParent() != null) {
-                 sum.setParentId(d.getParent().getId());
+                    sum.setParentId(d.getParent().getId());
                 }
                 sum.setReference(d.getReference());
                 sum.setRemark(d.getRemark());
@@ -190,15 +190,18 @@ public class TransactionReceipt {
 
                 if (d.getAgent() != null) {
                     cont = d.getAgent();
-                } else {
+                } else if (d.getCustomer() != null) {
                     cont = d.getCustomer();
                 }
-                clientName = cont.calculateFullName();
-                email = cont.getEmail();
-                fax = cont.getFax();
-                mobile = cont.getMobile();
-                telNo = cont.getMobile();
-                addressCRSeperated = cont.getAddressCRSeperated();
+
+                if (cont != null) {
+                    clientName = cont.calculateFullName();
+                    email = cont.getEmail();
+                    fax = cont.getFax();
+                    mobile = cont.getMobile();
+                    telNo = cont.getMobile();
+                    addressCRSeperated = cont.getAddressCRSeperated();
+                }
 
                 this.totalItems = odocs.size();
                 this.totalAmount = total.abs().toString();

@@ -76,8 +76,8 @@ public class PaymentDAOImpl extends GenericDAOImpl<Payment, Long> implements Pay
         }
 
         String hql = "select distinct pay from Payment as pay "
-                //+ "left join fetch pay.createdBy as createdby "
-                //+ "left join fetch pay.lastModifiedBy as modifiedby "
+                + "left join fetch pay.createdBy as createdby "
+                + "left join fetch pay.lastModifiedBy as modifiedby "
                 + concatSaleType
                 + "left join fetch sp.pnr as p "
                 + "left join fetch p.segments "
@@ -116,8 +116,8 @@ public class PaymentDAOImpl extends GenericDAOImpl<Payment, Long> implements Pay
         }
 
         String hql = "select distinct pay from Payment as pay "
-                //+ "left join fetch pay.createdBy as createdby "
-                //+ "left join fetch pay.lastModifiedBy as modifiedby "
+                + "left join fetch pay.createdBy as createdby "
+                + "left join fetch pay.lastModifiedBy as modifiedby "
                 + "left join fetch pay.oSalesAcDocuments as sp "
                 + "left join fetch sp.parent as invoice "
                 + concatClient

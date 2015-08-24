@@ -3,12 +3,17 @@ package com.ets.accountingdoc_o.ws;
 import com.ets.accountingdoc_o.model.*;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
 import com.ets.accountingdoc_o.service.OSalesAcDocService;
+import com.ets.client.collection.Agents;
+import com.ets.client.collection.Customers;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.exception.ClientNotFoundException;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -58,6 +63,19 @@ public class OtherSalesAcDocWS {
     @RolesAllowed("SM")
     public Response delete(@PathParam("id") long id) {
         boolean success = service.delete(id);
+        if (success) {
+            return Response.status(200).build();
+        } else {
+            return Response.status(400).build();
+        }
+    }
+    
+    @DELETE
+    @Path("/deleteline/{id}")
+    @RolesAllowed("SM")
+    public Response deleteLine(@PathParam("id") long id,@QueryParam("userid") Long userid) {
+        
+        boolean success = service.deleteLine(id,userid);
         if (success) {
             return Response.status(200).build();
         } else {
@@ -187,7 +205,31 @@ public class OtherSalesAcDocWS {
             @QueryParam("dateEnd") String dateEnd) {
         Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
         Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
-        ProductivityReport report = service.agentOutstandingReport(dateFrom,dateTo);
+        ProductivityReport report = service.agentOutstandingReport(dateFrom, dateTo);
         return report;
+    }
+
+    @GET
+    @Path("/dueagents")
+    @RolesAllowed("SM")
+    @PermitAll
+    public Agents outstandingAgents(@QueryParam("doctype") Enums.AcDocType doctype) {
+
+        List<Agent> agent_list = service.outstandingAgents(doctype);
+        Agents agents = new Agents();
+        agents.setList(agent_list);
+        return agents;
+    }
+
+    @GET
+    @Path("/duecustomers")
+    @RolesAllowed("SM")
+    @PermitAll
+    public Customers outstandingCusotmers(@QueryParam("doctype") Enums.AcDocType doctype) {
+
+        List<Customer> customer_list = service.outstandingCusotmers(doctype);
+        Customers customers = new Customers();
+        customers.setList(customer_list);
+        return customers;
     }
 }

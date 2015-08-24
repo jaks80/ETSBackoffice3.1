@@ -6,11 +6,16 @@ import com.ets.accountingdoc.model.InvoiceModel;
 import com.ets.accountingdoc.model.InvoiceReport;
 import com.ets.accountingdoc.service.TPurchaseAcDocService;
 import com.ets.accountingdoc.service.TSalesAcDocService;
+import com.ets.client.collection.Agents;
+import com.ets.client.collection.Customers;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.*;
@@ -149,7 +154,8 @@ public class TicketingSalesAcDocWS {
 
     @GET
     @Path("/acdoc_report")
-    @RolesAllowed("SM")
+    //@RolesAllowed("SM")
+    @PermitAll
     public InvoiceReport outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,
@@ -236,5 +242,29 @@ public class TicketingSalesAcDocWS {
         
         ProductivityReport report = service.allAgentDueReport(dateFrom,dateTo);
         return report;
+    }
+    
+    @GET
+    @Path("/dueagents")
+    @RolesAllowed("SM")    
+    @PermitAll
+    public Agents outstandingAgents(@QueryParam("doctype") Enums.AcDocType doctype) {
+    
+        List<Agent> agent_list = service.outstandingAgents(doctype);
+        Agents agents = new Agents();
+        agents.setList(agent_list);
+        return agents;
+    }
+    
+    @GET
+    @Path("/duecustomers")
+    @RolesAllowed("SM")    
+    @PermitAll
+    public Customers outstandingCusotmers(@QueryParam("doctype") Enums.AcDocType doctype) {
+        
+        List<Customer> customer_list = service.outstandingCusotmers(doctype);
+        Customers customers = new Customers();
+        customers.setList(customer_list);
+        return customers;
     }
 }

@@ -45,6 +45,28 @@ public class CustomerWS {
         return customers;
     }
 
+    @GET
+    @Path("/customers/ks")
+    @RolesAllowed("SM")
+    public Customers find(@QueryParam("keyword") String keyword) {
+
+        List<Customer> list = service.querySearch(keyword);
+        Customers customers = new Customers();
+        customers.setList(list);
+        return customers;
+    }
+
+    @GET
+    @Path("/customerswithemail")
+    @RolesAllowed("SM")
+    public Customers find() {
+
+        List<Customer> list = service.findCustomerContainsEmail();
+        Customers customers = new Customers();
+        customers.setList(list);
+        return customers;
+    }
+
     @POST
     @Path("/new")
     @RolesAllowed("GS")
@@ -63,7 +85,7 @@ public class CustomerWS {
     @Path("/delete/{id}")
     @RolesAllowed("SM")
     public Response delete(@PathParam("id") long id) {
-         service.delete(id);
+        service.delete(id);
         return Response.status(200).build();
     }
 }

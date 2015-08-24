@@ -3,16 +3,15 @@ package com.ets.accountingdoc.dao;
 import com.ets.GenericDAOImpl;
 import com.ets.accountingdoc.domain.AdditionalChargeLine;
 import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
+import com.ets.client.domain.Agent;
 import com.ets.pnr.dao.TicketDAO;
 import com.ets.pnr.domain.Ticket;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -153,15 +152,15 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
                 + "left join fetch a.pnr as p "
                 + "left join fetch p.ticketing_agent as tktingagent "
                 + "where a.type = 0 and a.reference in (:references)";
-        
+
         Query query = getSession().createQuery(hql);
 
         query.setParameterList("references", references);
         List<TicketingPurchaseAcDoc> invoices = query.list();
-        if(!invoices.isEmpty()){
-         return invoices.get(0);
+        if (!invoices.isEmpty()) {
+            return invoices.get(0);
         }
-        
+
         return null;
     }
 
@@ -406,7 +405,6 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
 //            }
 //            saveBulk(new ArrayList(related_docs));
 //        }
-
         doc.setStatus(Enums.AcDocStatus.VOID);
         doc.setDocumentedAmount(new BigDecimal("0.00"));
         save(doc);
@@ -440,4 +438,32 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
         }
         return map;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
+
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String hql = "select distinct agent from TicketingPurchaseAcDoc as a "
+                + "inner join a.pnr as p "
+                + "inner join p.ticketing_agent as agent "
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from TicketingPurchaseAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
+                + " order by agent.name";
+
+        Query query = getSession().createQuery(hql);
+
+        List<Agent> agents = query.list();
+        return agents;
+    }
+
 }

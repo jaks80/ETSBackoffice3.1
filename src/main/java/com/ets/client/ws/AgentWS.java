@@ -45,6 +45,28 @@ public class AgentWS {
     }
 
     @GET
+    @Path("/agents/ks")//Keword Search
+    @RolesAllowed("SM")
+    public Agents find(@QueryParam("keyword") String keyword) {
+
+        List<Agent> list = service.querySearch(keyword);
+        Agents agents = new Agents();
+        agents.setList(list);
+        return agents;
+    }
+
+    @GET
+    @Path("/agentswithemail")
+    @RolesAllowed("SM")
+    public Agents find() {
+
+        List<Agent> list = service.findAgentContainsEmail();
+        Agents agents = new Agents();
+        agents.setList(list);
+        return agents;
+    }
+
+    @GET
     @Path("/ticketingagents")
     @RolesAllowed("GS")
     public Agents findTicketingAgents() {
@@ -54,22 +76,22 @@ public class AgentWS {
         agents.setList(list);
         return agents;
     }
-    
+
     @GET
     @Path("/agents/kw")
     @RolesAllowed("GS")
     public Agents findByQuery(@QueryParam("keyword") String keyword) {
 
         List<Agent> list = service.findByKeyword(null, keyword);
-        if(list.isEmpty()){
-        list = service.findByKeyword(keyword, null);
+        if (list.isEmpty()) {
+            list = service.findByKeyword(keyword, null);
         }
-        
+
         Agents agents = new Agents();
         agents.setList(list);
         return agents;
     }
-    
+
     @POST
     @Path("/new")
     @RolesAllowed("SM")

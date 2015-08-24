@@ -19,6 +19,8 @@ public class AgentDAOImpl extends GenericDAOImpl<Agent, Long> implements AgentDA
     public List<Agent> findByOfficeID(String officeID) {
 
         String hql = "from Agent agt "
+                + "left join fetch agt.createdBy "
+                + "left join fetch agt.lastModifiedBy "
                 + "where agt.officeID=:officeID and agt.active = true";
 
         Query query = getSession().createQuery(hql);
@@ -39,6 +41,8 @@ public class AgentDAOImpl extends GenericDAOImpl<Agent, Long> implements AgentDA
         }
 
         String hql = "from Agent a "
+                + "left join fetch a.createdBy "
+                + "left join fetch a.lastModifiedBy "
                 + "where "
                 + "a.name like :name and "
                 + "a.postCode like :postCode and "
@@ -53,7 +57,7 @@ public class AgentDAOImpl extends GenericDAOImpl<Agent, Long> implements AgentDA
 
     @Override
     public List<Agent> findByKeyword(String name, String officeID) {
-        name = nullToEmptyValue(name).concat("%");       
+        name = nullToEmptyValue(name).concat("%");
         officeID = nullToEmptyValue(officeID).concat("%");
 
         if (officeID.length() > 2) {
@@ -61,8 +65,10 @@ public class AgentDAOImpl extends GenericDAOImpl<Agent, Long> implements AgentDA
         }
 
         String hql = "from Agent agt "
+                + "left join fetch agt.createdBy "
+                + "left join fetch agt.lastModifiedBy "
                 + "where "
-                + "agt.name like :name and "                
+                + "agt.name like :name and "
                 + "(agt.officeID is null or agt.officeID like :officeID and agt.active = true) ";
         Query query = getSession().createQuery(hql);
         query.setParameter("name", name);
@@ -77,6 +83,36 @@ public class AgentDAOImpl extends GenericDAOImpl<Agent, Long> implements AgentDA
                 + "where p.ticketingAgtOid = agt.officeID and agt.active = true order by agt.name ";
 
         Query query = getSession().createQuery(hql);
+        return query.list();
+    }
+
+    @Override
+    public List<Agent> findAgentContainsEmail() {
+        String hql = "select agt from Agent as agt "
+                + "where "
+                + "agt.email is not null and agt.email <>'' and agt.active = true";
+        Query query = getSession().createQuery(hql);        
+
+        return query.list();
+    }
+
+    @Override
+    public List<Agent> querySearch(String keyword) {
+        
+        keyword = nullToEmptyValue(keyword).concat("%");
+        
+        String hql = "from Agent a "
+                + "left join fetch a.createdBy "
+                + "left join fetch a.lastModifiedBy "
+                + "where "
+                + "a.name like :keyword or "
+                + "a.postCode like :keyword or "
+                + "a.email like :keyword or "
+                + "a.city like :keyword or "
+                + "a.telNo like :keyword or "
+                + "a.officeID like :keyword ";
+        Query query = getSession().createQuery(hql);
+        query.setParameter("keyword", keyword);
         return query.list();
     }
 }

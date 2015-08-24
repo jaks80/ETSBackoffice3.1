@@ -8,6 +8,8 @@ import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Ticket;
 import com.ets.pnr.service.PnrService;
 import com.ets.accountingdoc.model.InvoiceReport;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.settings.domain.User;
 import com.ets.util.*;
@@ -470,5 +472,17 @@ public class TSalesAcDocService {
         }
 
         return report;
+    }
+    
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
+    
+        List<Agent> agents = dao.outstandingAgents(acDocType);
+        return agents;
+    }
+    
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
+        
+        List<Customer> customers = dao.outstandingCusotmers(acDocType);
+        return customers;
     }
 }

@@ -174,6 +174,7 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
     }
 
     @OneToMany(mappedBy = "otherSalesAcDoc", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy(value = "id")
     public Set<AccountingDocumentLine> getAccountingDocumentLines() {
         return accountingDocumentLines;
     }
@@ -213,6 +214,7 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
     }
 
     @OneToMany(mappedBy = "otherSalesAcDoc", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy(value = "id")
     public Set<AdditionalChargeLine> getAdditionalChargeLines() {
         return additionalChargeLines;
     }

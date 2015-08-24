@@ -25,6 +25,10 @@ public class CustomerService {
         return dao.findByLike(surName, foreName, postCode, telNo);
     }
 
+    public List<Customer> querySearch(String keyword) {
+     return dao.querySearch(keyword);
+    }
+    
     public Customer getCustomer(Long id) {
         return dao.findByID(Customer.class, id);
     }
@@ -37,5 +41,9 @@ public class CustomerService {
     public void delete(Long id) {
         Customer customer = dao.findByID(Customer.class, id);
         dao.delete(customer);
+    }
+
+    public List<Customer> findCustomerContainsEmail() {
+        return dao.findCustomerContainsEmail();
     }
 }

@@ -5,6 +5,8 @@ import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
 import com.ets.accountingdoc.model.BSPReport;
 import com.ets.accountingdoc.service.TPurchaseAcDocService;
 import com.ets.accountingdoc.model.InvoiceReport;
+import com.ets.client.collection.Agents;
+import com.ets.client.domain.Agent;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
@@ -63,7 +65,7 @@ public class TicketingPurchaseAcDocWS {
     @Path("/byref/{refference}")
     @RolesAllowed("GS")
     public TicketingPurchaseAcDoc getByRefNo(@PathParam("refference") Long refference) {
-        TicketingPurchaseAcDoc invoice = service.findInvoiceByReference(refference);              
+        TicketingPurchaseAcDoc invoice = service.findInvoiceByReference(refference);
         return invoice;
     }
 
@@ -203,4 +205,17 @@ public class TicketingPurchaseAcDocWS {
 
         return report;
     }
+
+    @GET
+    @Path("/dueagents")
+    @RolesAllowed("SM")
+    @PermitAll
+    public Agents outstandingAgents(@QueryParam("doctype") Enums.AcDocType doctype) {
+
+        List<Agent> agent_list = service.outstandingAgents(doctype);
+        Agents agents = new Agents();
+        agents.setList(agent_list);
+        return agents;
+    }
+
 }

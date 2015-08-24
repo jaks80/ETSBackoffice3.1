@@ -2,6 +2,8 @@ package com.ets.accountingdoc.dao;
 
 import com.ets.GenericDAO;
 import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -43,4 +45,6 @@ public interface TPurchaseAcDocDAO extends GenericDAO<TicketingPurchaseAcDoc, Lo
     public BigDecimal getAccountBallanceToDate(Long agentid, Date dateEnd);
 
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
+                   
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType);    
 }

@@ -256,7 +256,7 @@ public class Enums {
             }
         }
     }
-        
+
     public enum PaymentType {
 
         CASH(0), CHEQUE(1), CREDIT_CARD(2), DEBIT_CARD(3), BANKT_TANSFER(4), OTHER(5), CREDIT_TRANSFER(6);
@@ -291,4 +291,42 @@ public class Enums {
             }
         }
     }
+
+    public enum ClientSearchType {
+
+        TICKETING_SALES_DUE_INVOICE(0), TICKETING_SALES_DUE_REFUND(1),
+        TICKETING_PURCHASE_DUE_INVOICE(2), TICKETING_PURCHASE_DUE_REFUND(3),
+        OTHER_SALES_DUE_INVOICE(4), OTHER_SALES_DUE_REFUND(5), ALL(6);
+        private int id;
+
+        ClientSearchType(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public static String valueOf(int id) {
+            switch (id) {
+                case 0:
+                    return TICKETING_SALES_DUE_INVOICE.toString();
+                case 1:
+                    return TICKETING_SALES_DUE_REFUND.toString();
+                case 2:
+                    return TICKETING_PURCHASE_DUE_INVOICE.toString();
+                case 3:
+                    return TICKETING_PURCHASE_DUE_REFUND.toString();
+                case 4:
+                    return OTHER_SALES_DUE_INVOICE.toString();
+                case 5:
+                    return OTHER_SALES_DUE_REFUND.toString();
+                case 6:
+                    return ALL.toString();
+                default:
+                    return null;
+            }
+        }
+    }
+
 }

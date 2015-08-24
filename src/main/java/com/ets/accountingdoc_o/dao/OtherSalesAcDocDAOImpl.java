@@ -3,6 +3,8 @@ package com.ets.accountingdoc_o.dao;
 import com.ets.GenericDAOImpl;
 import com.ets.accountingdoc.dao.AdditionalChgLineDAO;
 import com.ets.accountingdoc.domain.*;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
@@ -48,6 +50,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "left join fetch acl.additionalCharge "
                 + "left join fetch a.agent "
                 + "left join fetch a.customer "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch a.relatedDocuments as a1 "
                 + "left join fetch a1.payment as payment "
                 + "left join fetch a1.accountingDocumentLines as adl1 "
@@ -79,6 +82,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
     public List<OtherSalesAcDoc> findAllById(Long... id) {
         String hql = "select distinct a from OtherSalesAcDoc as a "
                 + "left join fetch a.accountingDocumentLines as adl "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch a.additionalChargeLines as acl "
                 + "left join fetch a.relatedDocuments as a1 "
                 + "left join fetch a1.accountingDocumentLines as adl1 "
@@ -138,7 +142,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         String hql = "select distinct a from OtherSalesAcDoc as a "
                 + "left join fetch a.accountingDocumentLines as adl "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch adl.otherService as os "
                 + "left join fetch os.category "
                 + "left join fetch a.relatedDocuments as r "
@@ -182,7 +186,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         String hql = "select distinct a from OtherSalesAcDoc as a "
                 + "left join fetch a.accountingDocumentLines as adl "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch adl.otherService as os "
                 + "left join fetch os.category "
                 + "left join fetch a.relatedDocuments as r "
@@ -306,8 +310,8 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> allAgentOutstandingReport(Date from,Date to) {
-        
+    public Map<String, BigDecimal> allAgentOutstandingReport(Date from, Date to) {
+
         String sql = " select agt.name as agentname, coalesce(sum(acdoc.documentedAmount), 0) as balance "
                 + "from other_sales_acdoc invoice "
                 + "left outer join other_sales_acdoc acdoc on invoice.reference=acdoc.reference and (acdoc.status<>2) "
@@ -320,7 +324,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         Query query = getSession().createSQLQuery(sql);
         query.setParameter("from", from);
         query.setParameter("to", to);
-        
+
         List results = query.list();
         Map<String, BigDecimal> map = new LinkedHashMap<>();
 
@@ -330,5 +334,56 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             map.put((String) objects[0], (BigDecimal) objects[1]);
         }
         return map;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
+
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String hql = "select distinct agent from OtherSalesAcDoc as a "
+                + "inner join a.agent as agent "
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from OtherSalesAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
+                + " order by agent.name";
+
+        Query query = getSession().createQuery(hql);
+
+        List<Agent> agents = query.list();
+        return agents;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String hql = "select distinct customer from OtherSalesAcDoc as a "
+                + "inner join a.customer as customer "
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from OtherSalesAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
+                + " order by customer.surName";
+
+        Query query = getSession().createQuery(hql);
+
+        List<Customer> customers = query.list();
+        return customers;
     }
 }

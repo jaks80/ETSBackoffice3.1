@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +34,8 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
                 + "left join fetch p.remarks "
                 + "left join fetch p.agent "
                 + "left join fetch p.customer "
+                + "left join fetch p.createdBy "
+                + "left join fetch p.lastModifiedBy "
                 + "left join fetch p.ticketing_agent "
                 + "left join fetch t.ticketingSalesAcDoc "
                 + "left join fetch t.ticketingPurchaseAcDoc "

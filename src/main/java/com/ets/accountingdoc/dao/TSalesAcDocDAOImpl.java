@@ -2,6 +2,8 @@ package com.ets.accountingdoc.dao;
 
 import com.ets.GenericDAOImpl;
 import com.ets.accountingdoc.domain.*;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.pnr.dao.TicketDAO;
 import com.ets.pnr.domain.Ticket;
 import com.ets.settings.domain.User;
@@ -44,6 +46,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         String hql = "select distinct a from TicketingSalesAcDoc as a "
                 + "left join fetch a.additionalChargeLines as acl "
                 + "left join fetch a.pnr "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch a.relatedDocuments as a1 "
                 + "left join fetch a1.additionalChargeLines as acl1 "
                 + "where a.type = 0 and a.id in (:id)";
@@ -61,6 +64,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch a.additionalChargeLines as acl "
                 + "left join fetch acl.additionalCharge "
                 + "left join fetch a.tickets as t "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch a.relatedDocuments as a1 "
                 + "left join fetch a1.payment as p "
                 + "where a.pnr.id = :pnrId order by a.id asc";
@@ -124,6 +128,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch acl.additionalCharge "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.pnr as p "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch p.segments "
                 + "left join fetch p.agent "
                 + "left join fetch p.customer "
@@ -183,7 +188,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch a.relatedDocuments as r "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.pnr as p "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch p.segments "
                 + concatClient
                 + "where a.status <> 2 and a.type = 0 and "
@@ -204,7 +209,57 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             query.setParameter("to", to);
         }
 
-        List<TicketingSalesAcDoc> dueInvoices = query.list();
+        List<TicketingSalesAcDoc> dueInvoices = query.list();        
+        return dueInvoices;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to) {
+
+        String concatClient = "";
+        String dateCondition = "";
+        String clientcondition = "and (:clientid is null or client.id = :clientid) ";
+
+        if (from != null && to != null) {
+            dateCondition = "and a.docIssueDate >= :from and a.docIssueDate <= :to ";
+        }
+
+        if (clienttype != null && clienttype.equals(Enums.ClientType.AGENT)) {
+            concatClient = "inner join fetch p.agent as client ";
+        } else if (clienttype != null && clienttype.equals(Enums.ClientType.CUSTOMER)) {
+            concatClient = "inner join fetch p.customer as client ";
+        } else {
+            concatClient = "left join fetch p.agent left join fetch p.customer ";
+            clientcondition = "";
+        }
+
+        String hql = "select distinct a from TicketingSalesAcDoc as a "
+                + "left join fetch a.relatedDocuments as r "
+                + "left join fetch a.tickets as t "
+                + "left join fetch a.pnr as p "
+                + "left join fetch a.createdBy as user "
+                + "left join fetch p.segments "
+                + concatClient
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from TicketingSalesAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference) = 0 "
+                + dateCondition
+                + clientcondition
+                + " order by a.docIssueDate,a.id";
+
+        Query query = getSession().createQuery(hql);
+        if (!clientcondition.isEmpty()) {
+            query.setParameter("clientid", clientid);
+        }
+
+        if (from != null && to != null) {
+            query.setParameter("from", from);
+            query.setParameter("to", to);
+        }
+
+        List<TicketingSalesAcDoc> dueInvoices = query.list();        
         return dueInvoices;
     }
 
@@ -228,7 +283,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch a.relatedDocuments as r "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.pnr as p "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "inner join fetch p.segments as seg "
                 + concatClient
                 + "where a.status<>2 and a.type = 0 and "
@@ -270,10 +325,10 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.relatedDocuments as r "
                 + "left join fetch a.pnr as p "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch p.segments "
                 + concatClient
-                + "where a.status<>2 and a.type = 0 "
+                + "where a.status <> 2 and a.type = 0 "
                 + "and a.docIssueDate >= :from and a.docIssueDate <= :to "
                 + clientcondition
                 + " order by a.docIssueDate,a.id";
@@ -289,6 +344,45 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         return invoice_history;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TicketingSalesAcDoc> findArchivedInvoices(Enums.ClientType clienttype, Long clientid, Date from, Date to) {
+        String concatClient = "";
+        String clientcondition = "and (:clientid is null or client.id = :clientid) ";
+
+        if (clienttype != null && clienttype.equals(Enums.ClientType.AGENT)) {
+            concatClient = "inner join fetch p.agent as client ";
+        } else if (clienttype != null && clienttype.equals(Enums.ClientType.CUSTOMER)) {
+            concatClient = "inner join fetch p.customer as client ";
+        } else {
+            concatClient = "left join fetch p.agent left join fetch p.customer ";
+            clientcondition = "";
+        }
+
+        String hql = "select distinct a from TicketingSalesAcDoc as a "
+                + "left join fetch a.tickets as t "
+                + "left join fetch a.relatedDocuments as r "
+                + "left join fetch a.pnr as p "
+                + "left join fetch a.createdBy as user "
+                + "left join fetch p.segments "
+                + concatClient
+                + "where a.status = 1 and a.type = 0 "
+                + "and a.docIssueDate >= :from and a.docIssueDate <= :to "
+                + clientcondition
+                + " order by a.docIssueDate,a.id";
+
+        Query query = getSession().createQuery(hql);
+        if (!clientcondition.isEmpty()) {
+            query.setParameter("clientid", clientid);
+        }
+        query.setParameter("from", from);
+        query.setParameter("to", to);
+
+        List<TicketingSalesAcDoc> invoice_history = query.list();
+        return invoice_history;
+    }
+
+    
     @Override
     public TicketingSalesAcDoc voidSimpleDocument(TicketingSalesAcDoc doc) {
         doc.setStatus(Enums.AcDocStatus.VOID);
@@ -358,7 +452,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.payment as payment "
                 + "left join fetch a.pnr as p "
-                + "left join a.createdBy as user "
+                + "left join fetch a.createdBy as user "
                 + "left join fetch p.segments "
                 + concatClient
                 + "where a.status <> 2 "
@@ -487,5 +581,106 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         query.setParameter("ticketId", ticketId);
         TicketingSalesAcDoc result = (TicketingSalesAcDoc) query.uniqueResult();
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> outstandingAgentsName() {
+        String sql = "select agt.name as agentname, agt.id as id "
+                + "from tkt_sales_acdoc invoice "
+                + "left outer join pnr p on invoice.pnr_fk=p.id "
+                + "inner join agent agt on p.agentid_fk=agt.id "
+                + "where invoice.status<>2 and invoice.type=0 and (select sum(ticketings4_.documentedAmount) from tkt_sales_acdoc ticketings4_ where invoice.reference=ticketings4_.reference and ticketings4_.status<>2 group by ticketings4_.reference)>0 "
+                + "group by agt.id order by agentname asc";
+
+        Query query = getSession().createSQLQuery(sql);
+
+        List results = query.list();
+        List<String> agents = new ArrayList<>();
+
+        Iterator it = results.iterator();
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+            agents.add((String) objects[0] + "-" + (String) objects[1]);
+        }
+        return agents;
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> outstandingCusotmersName() {
+        String sql = "select cust.surName as surName,cust.foreName as foreName, cust.id as id "
+                + "from tkt_sales_acdoc invoice "
+                + "left outer join pnr p on invoice.pnr_fk=p.id "
+                + "inner join customer cust on p.customerid_fk=cust.id "
+                + "where invoice.status<>2 and invoice.type=0 and "
+                + "(select sum(ticketings4_.documentedAmount) from tkt_sales_acdoc ticketings4_ where invoice.reference=ticketings4_.reference and ticketings4_.status<>2 group by ticketings4_.reference)>0 "
+                + "group by cust.id order by surName asc";
+
+        Query query = getSession().createSQLQuery(sql);
+
+        List results = query.list();
+        List<String> customers = new ArrayList<>();
+
+        Iterator it = results.iterator();
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+            customers.add((String) objects[0] + "/" + (String) objects[1] + "-" + (String) objects[2]);
+        }
+        return customers;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
+
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String hql = "select distinct agent from TicketingSalesAcDoc as a "
+                + "inner join a.pnr as p "
+                + "inner join p.agent as agent "
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from TicketingSalesAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
+                + " order by agent.name";
+
+        Query query = getSession().createQuery(hql);
+
+        List<Agent> agents = query.list();
+        return agents;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String hql = "select distinct customer from TicketingSalesAcDoc as a "
+                + "left join a.pnr as p "
+                + "inner join p.customer as customer "
+                + "where a.status <> 2 and a.type = 0 and "
+                + "(select sum(b.documentedAmount) as total "
+                + "from TicketingSalesAcDoc b "
+                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
+                + " order by customer.surName";
+
+        Query query = getSession().createQuery(hql);
+
+        List<Customer> customers = query.list();
+        return customers;
     }
 }

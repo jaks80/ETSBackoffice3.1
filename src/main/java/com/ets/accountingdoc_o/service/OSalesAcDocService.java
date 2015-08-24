@@ -5,6 +5,8 @@ import com.ets.accountingdoc_o.dao.*;
 import com.ets.accountingdoc_o.model.*;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.accountingdoc.service.AcDocUtil;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.exception.ClientNotFoundException;
 import com.ets.settings.domain.User;
 import com.ets.util.DateUtil;
@@ -29,13 +31,13 @@ public class OSalesAcDocService {
 
     public synchronized OtherSalesAcDoc newDocument(OtherSalesAcDoc doc) throws ClientNotFoundException {
 
-        if(doc.getAgent() == null && doc.getCustomer() == null){
+        if (doc.getAgent() == null && doc.getCustomer() == null) {
             throw new ClientNotFoundException("##Agent/Customer needed##");
         }
-        
+
         if (doc.getReference() == null && doc.getType().equals(Enums.AcDocType.INVOICE)) {
             //if (doc.getReference() == null) {
-                doc.setReference(AcDocUtil.generateAcDocRef(dao.getNewAcDocRef()));
+            doc.setReference(AcDocUtil.generateAcDocRef(dao.getNewAcDocRef()));
             //}
         }
 
@@ -95,6 +97,13 @@ public class OSalesAcDocService {
         return true;
     }
 
+    public boolean deleteLine(Long id,Long userid) {
+        boolean success = false;
+        lineDao.deleteLine(id,userid);                
+        success = true;
+        return success;
+    }
+
     public OtherSalesAcDoc _void(OtherSalesAcDoc other_doc) {
         OtherSalesAcDoc doc = dao.getWithChildrenById(other_doc.getId());
 
@@ -125,9 +134,9 @@ public class OSalesAcDocService {
         List<OtherSalesAcDoc> dueInvoices = dao.findOutstandingDocuments(type, clienttype, clientid, dateStart, dateEnd);
 
         for (OtherSalesAcDoc inv : dueInvoices) {
-            
-            Set<OtherSalesAcDoc> relatedDocs = AcDocUtil.filterVoidRelatedDocumentsOther(inv.getRelatedDocuments());            
-            
+
+            Set<OtherSalesAcDoc> relatedDocs = AcDocUtil.filterVoidRelatedDocumentsOther(inv.getRelatedDocuments());
+
             for (AccountingDocumentLine l : inv.getAccountingDocumentLines()) {
                 l.setOtherSalesAcDoc(null);
             }
@@ -217,9 +226,9 @@ public class OSalesAcDocService {
         return report;
     }
 
-    public ProductivityReport agentOutstandingReport(Date dateStart,Date dateEnd) {
+    public ProductivityReport agentOutstandingReport(Date dateStart, Date dateEnd) {
 
-        Map<String, BigDecimal> productivityLine = dao.allAgentOutstandingReport(dateStart,dateEnd);
+        Map<String, BigDecimal> productivityLine = dao.allAgentOutstandingReport(dateStart, dateEnd);
 
         ProductivityReport report = new ProductivityReport();
         report.setTitle("Agent Outstanding Report");
@@ -228,7 +237,7 @@ public class OSalesAcDocService {
         report.setDateTo(DateUtil.dateToString(dateEnd));
 
         for (String key : productivityLine.keySet()) {
-             ProductivityReport.ProductivityLine line = new ProductivityReport.ProductivityLine();
+            ProductivityReport.ProductivityLine line = new ProductivityReport.ProductivityLine();
             line.setKey(key);
             line.setValue(productivityLine.get(key).abs().toString());
             report.addLine(line);
@@ -236,4 +245,17 @@ public class OSalesAcDocService {
 
         return report;
     }
+
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
+
+        List<Agent> agents = dao.outstandingAgents(acDocType);
+        return agents;
+    }
+
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
+
+        List<Customer> customers = dao.outstandingCusotmers(acDocType);
+        return customers;
+    }
+
 }

@@ -2,6 +2,8 @@ package com.ets.accountingdoc_o.dao;
 
 import com.ets.GenericDAO;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
+import com.ets.client.domain.Agent;
+import com.ets.client.domain.Customer;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
@@ -34,4 +36,9 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     public Map<User,BigDecimal> userProductivityReport(Date dateStart,Date dateEnd);
     
     public Map<String,BigDecimal> allAgentOutstandingReport(Date dateStart,Date dateEnd);
+    
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType);
+    
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType);
+
 }
