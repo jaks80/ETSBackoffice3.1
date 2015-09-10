@@ -87,9 +87,13 @@ public class OSalesAcDocService {
         return invoices;
     }
 
-    public List<OtherSalesAcDoc> getByReffference(int refNo) {
-        throw new UnsupportedOperationException("Not supported yet.");
+   public InvoiceReportOther findInvoiceSummeryByReference(Long... refNo) {
+        List<OtherSalesAcDoc> invoices = dao.findInvoiceByRef(refNo);
+        InvoiceReportOther report = InvoiceReportOther.serializeToSalesSummery(null, invoices, null, null);
+        report.setTitle("Invoice Report");
+        return report;
     }
+ 
 
     public boolean delete(Long id) {
         OtherSalesAcDoc doc = dao.getWithChildrenById(id);
@@ -248,13 +252,13 @@ public class OSalesAcDocService {
 
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
 
-        List<Agent> agents = dao.outstandingAgents(acDocType);
+        List<Agent> agents = dao.outstandingAgentsSQL(acDocType);
         return agents;
     }
 
     public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
 
-        List<Customer> customers = dao.outstandingCusotmers(acDocType);
+        List<Customer> customers = dao.outstandingCustomersSQL(acDocType);
         return customers;
     }
 

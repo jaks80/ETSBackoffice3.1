@@ -28,7 +28,7 @@ public interface TPurchaseAcDocDAO extends GenericDAO<TicketingPurchaseAcDoc, Lo
 
     public List<Long> findOutstandingInvoiceReference(Enums.AcDocType acDocType, Long agentid, Date from, Date to);
 
-    public TicketingPurchaseAcDoc findInvoiceByRef(Long... reference);
+    public List<TicketingPurchaseAcDoc> findInvoiceByRef(Long... reference);
 
     public List<TicketingPurchaseAcDoc> findOutstandingInvoice(Enums.AcDocType type, Long agentid, Date dateStart, Date dateEnd);
 
@@ -47,4 +47,6 @@ public interface TPurchaseAcDocDAO extends GenericDAO<TicketingPurchaseAcDoc, Lo
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
                    
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType);    
+    
+    public List<Agent> findTicketingAgents();
 }

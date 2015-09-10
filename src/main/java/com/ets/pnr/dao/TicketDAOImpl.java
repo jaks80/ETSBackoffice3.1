@@ -1,8 +1,9 @@
 package com.ets.pnr.dao;
 
 import com.ets.GenericDAOImpl;
+import com.ets.accountingdoc.dao.TPurchaseAcDocDAO;
 import com.ets.accountingdoc.dao.TSalesAcDocDAO;
-import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
+import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
 import com.ets.pnr.domain.Ticket;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
@@ -21,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements TicketDAO {
 
-//    @Resource(name = "tPurchaseAcDocDAO")
-//    private TPurchaseAcDocDAO tPurchaseAcDocDAO;
+    @Resource(name = "tPurchaseAcDocDAO")
+    private TPurchaseAcDocDAO tPurchaseAcDocDAO;
     @Resource(name = "tSalesAcDocDAO")
     private TSalesAcDocDAO tSalesAcDocDAO;
 
@@ -71,33 +72,34 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
     @Override
     public int voidTicket(String pnr, String airlineCode, String ticketNo, String surName) {
         Ticket ticket = findTicket(pnr, ticketNo, surName);
-        if(ticket == null){
-         return 0;
+        if (ticket == null) {
+            return 0;
         }
-        
+
         ticket.setBaseFare(new BigDecimal("0.00"));
         ticket.setTax(new BigDecimal("0.00"));
         ticket.setFee(new BigDecimal("0.00"));
         ticket.setCommission(new BigDecimal("0.00"));
-        ticket.setGrossFare(new BigDecimal("0.00"));
-        ticket.setAtolChg(new BigDecimal("0.00"));
-        ticket.setDiscount(new BigDecimal("0.00"));
+        //ticket.setGrossFare(new BigDecimal("0.00"));
+        //ticket.setAtolChg(new BigDecimal("0.00"));
+        //ticket.setDiscount(new BigDecimal("0.00"));
         ticket.setTktStatus(Enums.TicketStatus.VOID);
         save(ticket);
 
         //One void ticket will void entire Sales Document.
         //ATTN: If there is related documents like payment and adm/acm,what will happen to that!!!
-        TicketingSalesAcDoc sales_doc = tSalesAcDocDAO.getByTicketId(ticket.getId());
-        if (sales_doc != null && !sales_doc.getStatus().equals(Enums.AcDocStatus.VOID)) {
-            tSalesAcDocDAO.voidTicketedDocument(sales_doc);
+        /*
+         TicketingSalesAcDoc sales_doc = tSalesAcDocDAO.getByTicketId(ticket.getId());
+         if (sales_doc != null && !sales_doc.getStatus().equals(Enums.AcDocStatus.VOID)) {
+         tSalesAcDocDAO.voidTicketedDocument(sales_doc);
+         }
+         */
+        
+        if (ticket.getTicketingPurchaseAcDoc() != null) {
+            TicketingPurchaseAcDoc doc = tPurchaseAcDocDAO.getWithChildrenById(ticket.getTicketingPurchaseAcDoc().getId());
+            doc.setDocumentedAmount(doc.calculateDocumentedAmount());
+            tPurchaseAcDocDAO.save(doc);
         }
-
-        //Bellow code is redundant. Because voiding sales document deletes purchase doc anyway.
-//        if (ticket.getTicketingPurchaseAcDoc() != null) {
-//            TicketingPurchaseAcDoc doc = tPurchaseAcDocDAO.getWithChildrenById(ticket.getTicketingPurchaseAcDoc().getId());
-//            doc.setDocumentedAmount(doc.calculateDocumentedAmount());
-//            tPurchaseAcDocDAO.save(doc);
-//        }
         return 1;
     }
 
@@ -151,9 +153,9 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
 
     @Override
     @Transactional(readOnly = true)
-    public List<Ticket> saleRevenueReport(Long userid, Enums.TicketStatus ticketStatus, String[] airLineCode, Date from, Date to, 
-            Enums.ClientType clienttype,Long clientid, String... ticketingAgtOid) {
-        
+    public List<Ticket> saleRevenueReport(Long userid, Enums.TicketStatus ticketStatus, String[] airLineCode, Date from, Date to,
+            Enums.ClientType clienttype, Long clientid, String... ticketingAgtOid) {
+
         String airLineCodeQuery = "";
         String ticketingAgtOidQuery = "";
         String userQuery = "";
@@ -179,7 +181,7 @@ public class TicketDAOImpl extends GenericDAOImpl<Ticket, Long> implements Ticke
             concatClient = "left join fetch p.agent left join fetch p.customer ";
             clientcondition = "";
         }
-        
+
         String hql = "select distinct t from Ticket as t "
                 + "left join fetch t.pnr as p "
                 + "left join fetch p.ticketing_agent as vendor "

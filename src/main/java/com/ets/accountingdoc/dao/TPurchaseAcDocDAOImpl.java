@@ -8,6 +8,7 @@ import com.ets.pnr.dao.TicketDAO;
 import com.ets.pnr.domain.Ticket;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -142,7 +143,7 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
 
     @Override
     @Transactional(readOnly = true)
-    public TicketingPurchaseAcDoc findInvoiceByRef(Long... references) {
+    public List<TicketingPurchaseAcDoc> findInvoiceByRef(Long... references) {
 
         String hql = "select distinct a from TicketingPurchaseAcDoc as a "
                 + "left join fetch a.additionalChargeLines as adl "
@@ -150,18 +151,15 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
                 + "left join fetch a.relatedDocuments as r "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.pnr as p "
-                + "left join fetch p.ticketing_agent as tktingagent "
+                + "left join fetch p.segments "
+                + "inner join fetch p.ticketing_agent as tktingagent "
                 + "where a.type = 0 and a.reference in (:references)";
 
         Query query = getSession().createQuery(hql);
 
         query.setParameterList("references", references);
         List<TicketingPurchaseAcDoc> invoices = query.list();
-        if (!invoices.isEmpty()) {
-            return invoices.get(0);
-        }
-
-        return null;
+        return invoices;
     }
 
     /**
@@ -451,17 +449,53 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
             operator = '>';//To get outstanding invoice
         }
 
-        String hql = "select distinct agent from TicketingPurchaseAcDoc as a "
-                + "inner join a.pnr as p "
-                + "inner join p.ticketing_agent as agent "
-                + "where a.status <> 2 and a.type = 0 and "
-                + "(select sum(b.documentedAmount) as total "
-                + "from TicketingPurchaseAcDoc b "
-                + "where a.reference=b.reference and b.status <> 2 group by b.reference)" + operator + "0 "
-                + " order by agent.name";
+        String sql = "SELECT a.id, a.name, a.addLine1,a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo, a.officeID,  SUM(t.documentedAmount) AS balance "
+                + "FROM tkt_purch_acdoc t "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "INNER JOIN agent a ON pnr.tkagentid_fk = a.id "
+                + "WHERE t.status = 0 "
+                + "GROUP BY t.reference "
+                + "HAVING balance " + operator + " 0 ORDER BY a.name ";
+
+        Query query = getSession().createSQLQuery(sql);
+        List results = query.list();
+
+        Iterator it = results.iterator();
+        Map<Long, Agent> agents = new LinkedHashMap<>();
+
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+
+            Agent a = new Agent();
+
+            BigInteger bid = new BigInteger(objects[0].toString());
+            a.setId(bid.longValue());
+
+            a.setName((String) objects[1]);
+            a.setAddLine1((String) objects[2]);
+            a.setAddLine2((String) objects[3]);
+            a.setCity((String) objects[4]);
+            a.setCountry((String) objects[5]);
+            a.setEmail((String) objects[6]);
+            a.setFax((String) objects[7]);
+            a.setMobile((String) objects[8]);
+            a.setPostCode((String) objects[9]);
+            a.setTelNo((String) objects[10]);
+            a.setOfficeID((String) objects[11]);
+
+            agents.put(a.getId(), a);
+        }
+
+        return new ArrayList<>(agents.values());
+    }
+
+    @Override
+    public List<Agent> findTicketingAgents() {
+
+        String hql = "select distinct agt from Agent as agt, Pnr as p "
+                + "where p.ticketingAgtOid = agt.officeID and agt.active = true order by agt.name ";
 
         Query query = getSession().createQuery(hql);
-
         List<Agent> agents = query.list();
         return agents;
     }

@@ -61,6 +61,7 @@ public class TSalesAcDocService {
         //We need to imrpove this logic here. Booking invoice
         // Booking date will be invoice date, then after issue how iisue date will be in invoice.
         //        
+        Set<Ticket> uninvoicedVoidTicket = PnrUtil.getUnInvoicedVoidTicket(pnr, Enums.SaleType.TKTSALES);
         Set<Ticket> uninvoicedIssuedTicket = PnrUtil.getUnInvoicedIssuedTicket(pnr, Enums.SaleType.TKTSALES);
         Set<Ticket> uninvoicedReIssuedTicket = PnrUtil.getUnInvoicedReIssuedTicket(pnr, Enums.SaleType.TKTSALES);
         Set<Ticket> uninvoicedRefundTicket = PnrUtil.getUnRefundedTickets(pnr, Enums.SaleType.TKTSALES);
@@ -112,6 +113,19 @@ public class TSalesAcDocService {
                 invoice.setRelatedDocuments(null);
                 invoice.setAdditionalChargeLines(null);
                 draftDocument = logic.newTicketingDraftCMemo(invoice, uninvoicedRefundTicket);
+            }
+        } else if (!uninvoicedVoidTicket.isEmpty()) {
+            if (invoices.isEmpty()) {
+                draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedVoidTicket);
+            } else {
+                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesInvoices(invoices);
+                if (void_invoices.isEmpty()) {
+                    draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedVoidTicket);
+                } else {
+                    TicketingSalesAcDoc void_invoice = void_invoices.iterator().next();
+                    void_invoice.setRelatedDocuments(null);
+                    draftDocument = logic.newTicketingDraftInvoice(void_invoice, uninvoicedVoidTicket);
+                }
             }
         } else if (!uninvoicedBookedTicket.isEmpty()) {
             if (invoices.isEmpty()) {
@@ -178,10 +192,15 @@ public class TSalesAcDocService {
     }
 
     /*
-    Check if invoice already was in database. In case of VOID.
-    */
+     Check if invoice already was in database. In case of VOID.
+     */
     private TicketingPurchaseAcDoc autoCreatePurchaseDocumentUpdate(TicketingSalesAcDoc doc) {
-        TicketingPurchaseAcDoc p_doc = purchase_service.findInvoiceByReference(doc.getReference());
+        List<TicketingPurchaseAcDoc> p_docs = purchase_service.findInvoiceByReference(doc.getReference());
+        TicketingPurchaseAcDoc p_doc = null;
+        if (p_docs.size() > 0) {
+            p_doc = p_docs.get(0);
+        }
+
         if (p_doc == null || !p_doc.getStatus().equals(Enums.AcDocStatus.VOID)) {
             p_doc = new TicketingPurchaseAcDoc();
         }
@@ -364,6 +383,13 @@ public class TSalesAcDocService {
         return dao.voidTicketedDocument(doc);
     }
 
+    public InvoiceReport findInvoiceSummeryByReference(Long... refNo) {
+        List<TicketingSalesAcDoc> invoices = dao.findInvoiceByRef(refNo);
+        InvoiceReport report = InvoiceReport.serializeToSalesSummery(null, invoices, null, null);
+        report.setTitle("Invoice Report");
+        return report;
+    }
+
     public InvoiceReport invoiceHistoryReport(Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd) {
         List<TicketingSalesAcDoc> invoice_history = dao.findInvoiceHistory(clienttype, clientid, dateStart, dateEnd);
 
@@ -473,16 +499,16 @@ public class TSalesAcDocService {
 
         return report;
     }
-    
+
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
-    
-        List<Agent> agents = dao.outstandingAgents(acDocType);
+
+        List<Agent> agents = dao.outstandingAgentsSQL(acDocType);        
         return agents;
     }
-    
+
     public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
-        
-        List<Customer> customers = dao.outstandingCusotmers(acDocType);
+
+        List<Customer> customers = dao.outstandingCustomersSQL(acDocType);
         return customers;
     }
 }

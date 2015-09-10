@@ -153,9 +153,22 @@ public class TicketingSalesAcDocWS {
     }
 
     @GET
+    @Path("/byref/{refferences}")
+    @RolesAllowed("GS")   
+    public InvoiceReport getReportByReferenceNumber(@PathParam("refferences") String refferences) {
+        String[] ids_str = refferences.split(",");
+        Long[] ids_long = new Long[ids_str.length];
+        for (int i = 0; i < ids_str.length; i++) {
+            ids_long[i] = Long.valueOf(ids_str[i]);
+        }
+
+        InvoiceReport report = service.findInvoiceSummeryByReference(ids_long);
+        return report;
+    }
+
+    @GET
     @Path("/acdoc_report")
-    //@RolesAllowed("SM")
-    @PermitAll
+    @RolesAllowed("SM")   
     public InvoiceReport outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,
@@ -178,7 +191,7 @@ public class TicketingSalesAcDocWS {
 
     @GET
     @Path("/paymentdue_flight")
-    @RolesAllowed("GS")    
+    @RolesAllowed("GS")
     public InvoiceReport outstandingFlightReport(
             @QueryParam("clienttype") Enums.ClientType clienttype,
             @QueryParam("clientid") Long clientid,
@@ -187,7 +200,7 @@ public class TicketingSalesAcDocWS {
 
         Date dateFrom = null;
         Date dateTo = null;
-        
+
         if (dateStart != null && dateEnd != null) {
             dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
             dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
@@ -232,36 +245,36 @@ public class TicketingSalesAcDocWS {
 
     @GET
     @Path("/allagentduereport")
-    @RolesAllowed("AD")    
+    @RolesAllowed("AD")
     public ProductivityReport allAgentDueReport(
             @QueryParam("dateStart") String dateStart,
             @QueryParam("dateEnd") String dateEnd) {
-        
+
         Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
         Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
-        
-        ProductivityReport report = service.allAgentDueReport(dateFrom,dateTo);
+
+        ProductivityReport report = service.allAgentDueReport(dateFrom, dateTo);
         return report;
     }
-    
+
     @GET
     @Path("/dueagents")
-    @RolesAllowed("SM")    
+    @RolesAllowed("SM")
     @PermitAll
     public Agents outstandingAgents(@QueryParam("doctype") Enums.AcDocType doctype) {
-    
+
         List<Agent> agent_list = service.outstandingAgents(doctype);
         Agents agents = new Agents();
         agents.setList(agent_list);
         return agents;
     }
-    
+
     @GET
     @Path("/duecustomers")
-    @RolesAllowed("SM")    
+    @RolesAllowed("SM")
     @PermitAll
     public Customers outstandingCusotmers(@QueryParam("doctype") Enums.AcDocType doctype) {
-        
+
         List<Customer> customer_list = service.outstandingCusotmers(doctype);
         Customers customers = new Customers();
         customers.setList(customer_list);

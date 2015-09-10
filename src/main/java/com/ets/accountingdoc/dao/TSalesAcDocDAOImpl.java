@@ -9,6 +9,7 @@ import com.ets.pnr.domain.Ticket;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -631,6 +632,11 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         return customers;
     }
 
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
@@ -657,7 +663,118 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         List<Agent> agents = query.list();
         return agents;
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType) {
 
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String sql = "SELECT a.id, a.name, a.addLine1,a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo, a.officeID,  SUM(t.documentedAmount) AS balance "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "INNER JOIN agent a ON pnr.agentid_fk = a.id "
+                + "WHERE t.status = 0 "
+                + "GROUP BY t.reference "
+                + "HAVING balance " + operator + " 0 ORDER BY a.name ";
+
+        Query query = getSession().createSQLQuery(sql);
+        List results = query.list();
+        
+        Iterator it = results.iterator();
+        Map<Long,Agent> agents = new LinkedHashMap<>();
+        
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+            
+            Agent a = new Agent();
+            
+            BigInteger bid = new BigInteger(objects[0].toString());            
+            a.setId(bid.longValue());
+            
+            a.setName((String) objects[1]);
+            a.setAddLine1((String) objects[2]);
+            a.setAddLine2((String) objects[3]);
+            a.setCity((String) objects[4]);
+            a.setCountry((String) objects[5]);
+            a.setEmail((String) objects[6]);
+            a.setFax((String) objects[7]);
+            a.setMobile((String) objects[8]);
+            a.setPostCode((String) objects[9]);
+            a.setTelNo((String) objects[10]);
+            a.setOfficeID((String) objects[11]);            
+            
+            agents.put(a.getId(), a);
+        }  
+        
+        return new ArrayList<>(agents.values());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Customer> outstandingCustomersSQL(Enums.AcDocType acDocType) {
+
+        char operator;
+
+        if (acDocType.equals(Enums.AcDocType.REFUND)) {
+            operator = '<';//To get outstanding refund
+        } else {
+            operator = '>';//To get outstanding invoice
+        }
+
+        String sql = "SELECT a.id, a.foreName, a.surName, a.contactPerson, a.addLine1,a.addLine2, a.city, "
+                + "a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo,  SUM(t.documentedAmount) AS balance "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "INNER JOIN customer a ON pnr.customerid_fk = a.id "
+                + "WHERE t.status = 0 "
+                + "GROUP BY t.reference "
+                + "HAVING balance " + operator + " 0 ORDER BY a.surName ";
+
+        Query query = getSession().createSQLQuery(sql);
+        List results = query.list();
+        
+        Iterator it = results.iterator();
+        Map<Long,Customer> customers = new LinkedHashMap<>();
+        
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+            
+            Customer a = new Customer();
+            
+            BigInteger bid = new BigInteger(objects[0].toString());            
+            a.setId(bid.longValue());
+            
+            a.setForeName((String) objects[1]);
+            a.setSurName((String) objects[2]);
+            a.setContactPerson((String) objects[3]);
+            a.setAddLine1((String) objects[4]);
+            a.setAddLine2((String) objects[5]);
+            a.setCity((String) objects[6]);
+            a.setCountry((String) objects[7]);
+            a.setEmail((String) objects[8]);
+            a.setFax((String) objects[9]);
+            a.setMobile((String) objects[10]);
+            a.setPostCode((String) objects[11]);
+            a.setTelNo((String) objects[12]);            
+            
+            customers.put(a.getId(), a);
+        }  
+        
+        return new ArrayList<>(customers.values());
+    }
+    
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType) {
@@ -682,5 +799,24 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
 
         List<Customer> customers = query.list();
         return customers;
+    }
+
+    @Override
+    public List<TicketingSalesAcDoc> findInvoiceByRef(Long... references) {
+        String hql = "select distinct a from TicketingSalesAcDoc as a "                
+                + "left join fetch a.relatedDocuments as r "
+                + "left join fetch a.tickets as t "
+                + "left join fetch a.pnr as p "
+                + "left join fetch a.createdBy as user "
+                + "left join fetch p.segments "
+                + "left join fetch p.agent  "        
+                + "left join fetch p.customer  "
+                + "where a.type = 0 and a.reference in (:references)";
+
+        Query query = getSession().createQuery(hql);
+
+        query.setParameterList("references", references);
+        List<TicketingSalesAcDoc> invoices = query.list();
+        return invoices;
     }
 }

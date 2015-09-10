@@ -206,9 +206,10 @@ public class InvoiceReport implements Serializable {
             report.addInvoice(invSummery);
         }
 
+        if (from != null && to != null) {
         report.setDateFrom(DateUtil.dateToString(from));
         report.setDateTo(DateUtil.dateToString(to));
-
+        }
         String currency = Application.currency();
         report.setTotalInvAmount(currency + totalInvAmount.toString());
         report.setTotalCMAmount(currency + totalCMAmount.toString());

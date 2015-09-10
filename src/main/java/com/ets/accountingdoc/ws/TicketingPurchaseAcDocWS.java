@@ -62,11 +62,18 @@ public class TicketingPurchaseAcDocWS {
     }
 
     @GET
-    @Path("/byref/{refference}")
-    @RolesAllowed("GS")
-    public TicketingPurchaseAcDoc getByRefNo(@PathParam("refference") Long refference) {
-        TicketingPurchaseAcDoc invoice = service.findInvoiceByReference(refference);
-        return invoice;
+    @Path("/byref/{refferences}")
+    //@RolesAllowed("GS")
+    @PermitAll
+    public InvoiceReport getReportByReferenceNumber(@PathParam("refferences") String refferences) {
+        String[] ids_str = refferences.split(",");
+        Long[] ids_long = new Long[ids_str.length];
+        for (int i = 0; i < ids_str.length; i++) {
+            ids_long[i] = Long.valueOf(ids_str[i]);
+        }
+
+        InvoiceReport report = service.findInvoiceSummeryByReference(ids_long);
+        return report;
     }
 
     @POST
@@ -218,4 +225,14 @@ public class TicketingPurchaseAcDocWS {
         return agents;
     }
 
+    @GET
+    @Path("/ticketingagents")
+    @RolesAllowed("GS")
+    public Agents findTicketingAgents() {
+
+        List<Agent> list = service.findTicketingAgents();
+        Agents agents = new Agents();
+        agents.setList(list);
+        return agents;
+    }
 }

@@ -105,10 +105,17 @@ public class TPurchaseAcDocService {
         return undefineChildren(doc);
     }
 
-    public TicketingPurchaseAcDoc findInvoiceByReference(Long refNo) {
+    public List<TicketingPurchaseAcDoc> findInvoiceByReference(Long refNo) {
         return dao.findInvoiceByRef(refNo);
     }
 
+    public InvoiceReport findInvoiceSummeryByReference(Long... refNo) {
+        List<TicketingPurchaseAcDoc> invoices = dao.findInvoiceByRef(refNo);
+        InvoiceReport report = InvoiceReport.serializeToPurchaseSummery(null, invoices, null, null);
+        report.setTitle("Invoice Report");
+        return report;
+    }
+    
     private TicketingPurchaseAcDoc undefineChildren(TicketingPurchaseAcDoc doc) {
 
         for (Ticket t : doc.getTickets()) {
@@ -319,4 +326,7 @@ public class TPurchaseAcDocService {
         return agents;
     }
 
+       public List<Agent> findTicketingAgents() {
+        return dao.findTicketingAgents();
+    }
 }

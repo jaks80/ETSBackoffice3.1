@@ -1,4 +1,4 @@
-INSERT INTO bo_user (id,loginID,password,surName,foreName,userType,active) VALUES (1,'supertech','YLSE0JPafNCpmYHp7iSEmg==partition[115, 65, -81, 29, 121, 97, -68, -31, -29, 106, 99, 40, 55, -78, 120, 33]','Akhond','YS',3,1);
+INSERT INTO bo_user (id,loginID,password,surName,foreName,userType,active) VALUES (1,'supertech','YLSE0JPafNCpmYHp7iSEmg==partition[115, 65, -81, 29, 121, 97, -68, -31, -29, 106, 99, 40, 55, -78, 120, 33]','Akhond','YS',3,true);
 
 INSERT INTO additional_charge (id,title,charge,calculationType) VALUES (1,'Card Handling','0.00',2);
 INSERT INTO additional_charge (id,title,charge,calculationType) VALUES (2,'Postage','0.00',1);

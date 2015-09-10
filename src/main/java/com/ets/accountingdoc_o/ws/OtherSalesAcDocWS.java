@@ -2,6 +2,7 @@ package com.ets.accountingdoc_o.ws;
 
 import com.ets.accountingdoc_o.model.*;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
+import com.ets.accountingdoc.model.InvoiceReport;
 import com.ets.accountingdoc_o.service.OSalesAcDocService;
 import com.ets.client.collection.Agents;
 import com.ets.client.collection.Customers;
@@ -49,13 +50,18 @@ public class OtherSalesAcDocWS {
     }
 
     @GET
-    @Path("/byref/{refference}")
+    @Path("/byref/{refferences}")
     @RolesAllowed("GS")
-    public OtherSalesAcDocs getByRefNo(@PathParam("refference") Integer refference) {
-        List<OtherSalesAcDoc> list = service.getByReffference(refference);
-        OtherSalesAcDocs docs = new OtherSalesAcDocs();
-        docs.setList(list);
-        return docs;
+    
+    public InvoiceReportOther getReportByReferenceNumber(@PathParam("refferences") String refferences) {
+        String[] ids_str = refferences.split(",");
+        Long[] ids_long = new Long[ids_str.length];
+        for (int i = 0; i < ids_str.length; i++) {
+            ids_long[i] = Long.valueOf(ids_str[i]);
+        }
+
+        InvoiceReportOther report = service.findInvoiceSummeryByReference(ids_long);
+        return report;
     }
 
     @DELETE
@@ -69,13 +75,13 @@ public class OtherSalesAcDocWS {
             return Response.status(400).build();
         }
     }
-    
+
     @DELETE
     @Path("/deleteline/{id}")
     @RolesAllowed("SM")
-    public Response deleteLine(@PathParam("id") long id,@QueryParam("userid") Long userid) {
-        
-        boolean success = service.deleteLine(id,userid);
+    public Response deleteLine(@PathParam("id") long id, @QueryParam("userid") Long userid) {
+
+        boolean success = service.deleteLine(id, userid);
         if (success) {
             return Response.status(200).build();
         } else {

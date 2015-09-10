@@ -22,12 +22,14 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
     public TicketingSalesAcDoc getWithChildrenById(Long id);
 
     public TicketingSalesAcDoc getByTicketId(Long ticketId);
-    
-    public TicketingSalesAcDoc getByTicket(Long pnrId,Long ticketNo);
+
+    public TicketingSalesAcDoc getByTicket(Long pnrId, Long ticketNo);
 
     public List<TicketingSalesAcDoc> findAllById(Long... id);
     
-    public TicketingSalesAcDoc findInvoiceByPaxName(String surName,Enums.TicketStatus ticketStatus, Long pnrId);
+    public List<TicketingSalesAcDoc> findInvoiceByRef(Long... references);
+
+    public TicketingSalesAcDoc findInvoiceByPaxName(String surName, Enums.TicketStatus ticketStatus, Long pnrId);
 
     public List<TicketingSalesAcDoc> getByPnrId(Long pnrId);
 
@@ -37,10 +39,32 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
 
     public TicketingSalesAcDoc voidTicketedDocument(TicketingSalesAcDoc doc);
 
-    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to);
+    public List<String> outstandingAgentsName();
+
+    public List<String> outstandingCusotmersName();
+
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
+    public List<Agent> outstandingAgents(Enums.AcDocType acDocType);
+
+    public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType);
     
-    public List<TicketingSalesAcDoc> findArchivedInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to);
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
+    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType);
     
+    public List<Customer> outstandingCustomersSQL(Enums.AcDocType acDocType);
+
+    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype, Long clientid, Date from, Date to);
+
+    public List<TicketingSalesAcDoc> findArchivedInvoices(Enums.ClientType clienttype, Long clientid, Date from, Date to);
+
     public List<TicketingSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd);
 
     public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype, Long clientid, Date dateFrom, Date dateEnd);
@@ -54,12 +78,4 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
     public Map<User, BigDecimal> userProductivityReport(Date dateStart, Date dateEnd);
 
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
-    
-    public List<String> outstandingAgentsName();
-    
-    public List<String> outstandingCusotmersName();
-    
-    public List<Agent> outstandingAgents(Enums.AcDocType acDocType);
-    
-    public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType);
 }

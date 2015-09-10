@@ -25,6 +25,8 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     
     public boolean voidDocument(OtherSalesAcDoc doc);
     
+    public List<OtherSalesAcDoc> findInvoiceByRef(Long... reference);
+    
     public List<OtherSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type,Enums.ClientType clienttype,Long clientid,Date dateStart,Date dateEnd);      
     
     public List<OtherSalesAcDoc> findInvoiceHistory(Enums.ClientType clienttype,Long clientid,Date dateStart,Date dateEnd);
@@ -37,8 +39,21 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     
     public Map<String,BigDecimal> allAgentOutstandingReport(Date dateStart,Date dateEnd);
     
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType);
     
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
     public List<Customer> outstandingCusotmers(Enums.AcDocType acDocType);
 
+    public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType);
+    
+    public List<Customer> outstandingCustomersSQL(Enums.AcDocType acDocType);
 }
