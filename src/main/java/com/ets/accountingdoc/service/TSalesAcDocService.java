@@ -1,5 +1,7 @@
 package com.ets.accountingdoc.service;
 
+import com.ets.pnr.logic.PnrUtil;
+import com.ets.Application;
 import com.ets.accountingdoc.dao.TSalesAcDocDAO;
 import com.ets.accountingdoc.domain.*;
 import com.ets.accountingdoc.logic.TicketingAcDocBL;
@@ -8,6 +10,7 @@ import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Ticket;
 import com.ets.pnr.service.PnrService;
 import com.ets.accountingdoc.model.InvoiceReport;
+import com.ets.accountingdoc.model.TktingInvoiceSummery;
 import com.ets.client.domain.Agent;
 import com.ets.client.domain.Customer;
 import com.ets.productivity.model.ProductivityReport;
@@ -15,8 +18,10 @@ import com.ets.settings.domain.User;
 import com.ets.util.*;
 import com.ets.util.Enums.AcDocType;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +65,7 @@ public class TSalesAcDocService {
 
         //We need to imrpove this logic here. Booking invoice
         // Booking date will be invoice date, then after issue how iisue date will be in invoice.
-        //        
+        //
         Set<Ticket> uninvoicedVoidTicket = PnrUtil.getUnInvoicedVoidTicket(pnr, Enums.SaleType.TKTSALES);
         Set<Ticket> uninvoicedIssuedTicket = PnrUtil.getUnInvoicedIssuedTicket(pnr, Enums.SaleType.TKTSALES);
         Set<Ticket> uninvoicedReIssuedTicket = PnrUtil.getUnInvoicedReIssuedTicket(pnr, Enums.SaleType.TKTSALES);
@@ -106,7 +111,7 @@ public class TSalesAcDocService {
                 draftDocument = logic.newTicketingDraftCMemo(invoice, uninvoicedRefundTicket);
             } else {
                 //For multiple invoices rfd tickets needs to be allocated properly. Which invoice credits which tickets
-                // So improve logic in this area.   
+                // So improve logic in this area.
                 TicketingSalesAcDoc invoice = invoices.get(0);
                 //We need only Invoice here not children
                 invoice.setTickets(null);
@@ -195,7 +200,26 @@ public class TSalesAcDocService {
      Check if invoice already was in database. In case of VOID.
      */
     private TicketingPurchaseAcDoc autoCreatePurchaseDocumentUpdate(TicketingSalesAcDoc doc) {
+
+        TicketingAcDocBL logic = new TicketingAcDocBL(doc.getPnr());
+
         List<TicketingPurchaseAcDoc> p_docs = purchase_service.findInvoiceByReference(doc.getReference());
+
+        TicketingPurchaseAcDoc p_invoice = null;
+        for (TicketingPurchaseAcDoc p : p_docs) {
+            if (p.getType().equals(Enums.AcDocType.INVOICE)) {
+                p_invoice = p;
+                break;
+            }
+        }
+
+        if (p_invoice == null) {
+            p_invoice = new TicketingPurchaseAcDoc();
+            p_invoice = logic.newTicketingPurchaseInvoice(doc, p_invoice);
+            purchase_service.createNewDocument(p_invoice);
+            return p_invoice;
+        }
+
         TicketingPurchaseAcDoc p_doc = null;
         if (p_docs.size() > 0) {
             p_doc = p_docs.get(0);
@@ -205,9 +229,13 @@ public class TSalesAcDocService {
             p_doc = new TicketingPurchaseAcDoc();
         }
 
-        TicketingAcDocBL logic = new TicketingAcDocBL(doc.getPnr());
-
         p_doc = logic.newTicketingPurchaseInvoice(doc, p_doc);
+
+        //Define parent for related documents. Parent itself should have this field null.
+        if (!p_doc.getType().equals(Enums.AcDocType.INVOICE)) {
+            p_doc.setParent(p_invoice);
+        }
+
         purchase_service.createNewDocument(p_doc);
 
         return p_doc;
@@ -221,35 +249,35 @@ public class TSalesAcDocService {
      *
      * @param doc
      */
-//    private TicketingPurchaseAcDoc autoCreatePurchaseDocuments(TicketingSalesAcDoc doc, Long pnrid) {
-//
-//        TicketingPurchaseAcDoc p_doc = new TicketingPurchaseAcDoc();
-//        TicketingAcDocBL logic = new TicketingAcDocBL(doc.getPnr());
-//
-//        if (doc.getType().equals(Enums.AcDocType.INVOICE)) {
-//            List<TicketingPurchaseAcDoc> acdocList = purchase_service.getByPnrId(pnrid);
-//            for (TicketingPurchaseAcDoc p : acdocList) {
-//                if (p.getType().equals(Enums.AcDocType.INVOICE)) {
-//                    p_doc = p;
-//                    break;
-//                }
-//            }
-//
-//            p_doc = logic.newTicketingPurchaseInvoice(doc, p_doc);
-//            purchase_service.createNewDocument(p_doc);
-//
-//        } else if (doc.getType().equals(Enums.AcDocType.DEBITMEMO)) {
-//            TicketingPurchaseAcDoc invoice = purchase_service.findInvoiceByPnrId(doc.getPnr().getId());
-//            p_doc = logic.newTicketingPurchaseDMemo(doc, invoice);
-//            purchase_service.createNewDocument(p_doc);
-//
-//        } else if (doc.getType().equals(Enums.AcDocType.CREDITMEMO)) {
-//            TicketingPurchaseAcDoc invoice = purchase_service.findInvoiceByPnrId(doc.getPnr().getId());
-//            p_doc = logic.newTicketingPurchaseCMemo(doc, invoice);
-//            purchase_service.createNewDocument(p_doc);
-//        }
-//        return p_doc;
-//    }
+    //    private TicketingPurchaseAcDoc autoCreatePurchaseDocuments(TicketingSalesAcDoc doc, Long pnrid) {
+    //
+    //        TicketingPurchaseAcDoc p_doc = new TicketingPurchaseAcDoc();
+    //        TicketingAcDocBL logic = new TicketingAcDocBL(doc.getPnr());
+    //
+    //        if (doc.getType().equals(Enums.AcDocType.INVOICE)) {
+    //            List<TicketingPurchaseAcDoc> acdocList = purchase_service.getByPnrId(pnrid);
+    //            for (TicketingPurchaseAcDoc p : acdocList) {
+    //                if (p.getType().equals(Enums.AcDocType.INVOICE)) {
+    //                    p_doc = p;
+    //                    break;
+    //                }
+    //            }
+    //
+    //            p_doc = logic.newTicketingPurchaseInvoice(doc, p_doc);
+    //            purchase_service.createNewDocument(p_doc);
+    //
+    //        } else if (doc.getType().equals(Enums.AcDocType.DEBITMEMO)) {
+    //            TicketingPurchaseAcDoc invoice = purchase_service.findInvoiceByPnrId(doc.getPnr().getId());
+    //            p_doc = logic.newTicketingPurchaseDMemo(doc, invoice);
+    //            purchase_service.createNewDocument(p_doc);
+    //
+    //        } else if (doc.getType().equals(Enums.AcDocType.CREDITMEMO)) {
+    //            TicketingPurchaseAcDoc invoice = purchase_service.findInvoiceByPnrId(doc.getPnr().getId());
+    //            p_doc = logic.newTicketingPurchaseCMemo(doc, invoice);
+    //            purchase_service.createNewDocument(p_doc);
+    //        }
+    //        return p_doc;
+    //    }
     public TicketingSalesAcDoc getWithChildrenById(long id) {
         TicketingSalesAcDoc doc = dao.getWithChildrenById(id);
         //validateDocumentedAmount(doc);
@@ -426,6 +454,121 @@ public class TSalesAcDocService {
         return dueInvoices;
     }
 
+    public InvoiceReport dueInvoiceReportSQL(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid,
+            Date dateStart, Date dateEnd) {
+
+        BigDecimal totalInvAmount = new BigDecimal("0.00");
+        BigDecimal totalDMAmount = new BigDecimal("0.00");
+        BigDecimal totalCMAmount = new BigDecimal("0.00");
+        BigDecimal totalDue = new BigDecimal("0.00");
+        BigDecimal totalPayment = new BigDecimal("0.00");
+        BigDecimal totalRefund = new BigDecimal("0.00");
+
+        List results = dao.findOutstandingDocumentsSQL(type, clienttype, clientid, dateStart, dateEnd);
+        List<TktingInvoiceSummery> invoices = new ArrayList<>();
+
+        Iterator it = results.iterator();
+        while (it.hasNext()) {
+            TktingInvoiceSummery s = new TktingInvoiceSummery();
+
+            Object[] objects = (Object[]) it.next();
+            BigInteger bid = new BigInteger(objects[0].toString());
+            s.setId(bid.longValue());
+            Date date = (Date) objects[1];
+            s.setDocIssueDate(DateUtil.dateToString(date));
+
+            BigInteger ref = new BigInteger(objects[2].toString());
+            s.setReference(ref.longValue());
+
+            s.setGdsPnr((String) objects[3]);
+            s.setNoOfPax((Integer) objects[4]);
+            s.setOutBoundDetails((String) objects[5]);
+            s.setLeadPsgr((String) objects[6]);
+            s.setAirLine((String) objects[7]);
+
+            BigDecimal invoiceAmount = (BigDecimal) objects[8];
+            s.setDocumentedAmount(invoiceAmount);
+
+            BigDecimal dueAmount = (BigDecimal) objects[9];
+            s.setDue(dueAmount);
+
+            String type_ = (String) objects[10];
+
+            if (type_ != null) {
+                char[] types = type_.replaceAll(",", "").toCharArray();
+
+                String amount_ = (String) objects[11];
+                String[] amounts = amount_.split(",");
+
+                BigDecimal payment = new BigDecimal("0.00");
+                BigDecimal refund = new BigDecimal("0.00");
+                BigDecimal debitMemo = new BigDecimal("0.00");
+                BigDecimal creditMemo = new BigDecimal("0.00");
+
+                for (int i = 0; i < types.length; i++) {
+
+                    int c = Character.getNumericValue(types[i]);
+
+                    if (c == Enums.AcDocType.PAYMENT.getId()) {
+                        payment = payment.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.REFUND.getId()) {
+                        refund = refund.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.CREDITMEMO.getId()) {
+                        creditMemo = creditMemo.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.DEBITMEMO.getId()) {
+                        debitMemo = debitMemo.add(new BigDecimal(amounts[i]));
+                    }
+                }
+
+                totalInvAmount = totalInvAmount.add(invoiceAmount);
+                totalDMAmount = totalDMAmount.add(debitMemo);
+                totalCMAmount = totalCMAmount.add(creditMemo);
+                totalPayment = totalPayment.add(payment);
+                totalRefund = totalRefund.add(refund);
+                totalDue = totalDue.add(dueAmount);
+
+                s.setPayment(payment.add(refund));
+                s.setOtherAmount(creditMemo.add(debitMemo));
+            }
+
+            s.setInvBy((String) objects[12] + "/" + (String) objects[13]);
+
+            if (Enums.ClientType.AGENT.equals(clienttype)) {
+                s.setClientName((String) objects[14]);
+            } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+                s.setClientName((String) objects[14] + "/" + objects[15]);
+            } else {
+                String name = (String) objects[14];
+                if (name != null && !name.isEmpty()) {
+                    s.setClientName(name);
+                } else {
+                    s.setClientName((String) objects[15] + "/" + objects[16]);
+                }
+            }
+
+            invoices.add(s);
+        }
+
+        InvoiceReport report = new InvoiceReport();
+        if (dateStart != null && dateEnd != null) {
+            report.setDateFrom(DateUtil.dateToString(dateStart));
+            report.setDateTo(DateUtil.dateToString(dateEnd));
+        }
+        report.setInvoices(invoices);
+
+        String currency = Application.currency();
+
+        report.setTotalInvAmount(currency + totalInvAmount.toString());
+        report.setTotalCMAmount(currency + totalCMAmount.toString());
+        report.setTotalDMAmount(currency + totalDMAmount.toString());
+        report.setTotalDue(currency + totalDue.toString());
+        report.setTotalPayment(currency + totalPayment.abs().toString());
+        report.setTotalRefund(currency + totalRefund.abs().toString());
+
+        report.setTitle("Outstanding Invoice Report");
+        return report;
+    }
+
     public InvoiceReport dueInvoiceReport(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid,
             Date dateStart, Date dateEnd) {
 
@@ -502,7 +645,7 @@ public class TSalesAcDocService {
 
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType) {
 
-        List<Agent> agents = dao.outstandingAgentsSQL(acDocType);        
+        List<Agent> agents = dao.outstandingAgentsSQL(acDocType);
         return agents;
     }
 

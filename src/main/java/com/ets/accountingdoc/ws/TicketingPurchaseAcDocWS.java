@@ -167,7 +167,7 @@ public class TicketingPurchaseAcDocWS {
     //*****************Reporting Methods are Bellow******************//
     @GET
     @Path("/acdoc_report")
-    @RolesAllowed("SM")
+    @RolesAllowed("SM")   
     public InvoiceReport outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("agentid") Long agentid,
@@ -177,12 +177,31 @@ public class TicketingPurchaseAcDocWS {
         Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
         Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
 
-        InvoiceReport report = service.dueInvoiceReport(doctype,
+        InvoiceReport report = service.dueInvoiceReportSQL(doctype,
                 agentid, dateFrom, dateTo);
 
         return report;
     }
 
+    @GET
+    @Path("/acdoc_reportsql")
+    //@RolesAllowed("SM")
+    @PermitAll
+    public InvoiceReport outstandingDocumentReportSQL(
+            @QueryParam("doctype") Enums.AcDocType doctype,
+            @QueryParam("agentid") Long agentid,
+            @QueryParam("dateStart") String dateStart,
+            @QueryParam("dateEnd") String dateEnd) {
+
+        Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
+        Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
+
+        InvoiceReport report = service.dueInvoiceReportSQL(doctype,
+                agentid, dateFrom, dateTo);
+
+        return report;
+    }
+    
     @GET
     @Path("/acdoc_history")
     @RolesAllowed("SM")

@@ -58,7 +58,10 @@ public class AppSettingsService {
 
     public AppSettings saveorUpdate(AppSettings appSettings) {
         AppSettings in_db = dao.findByID(AppSettings.class, Long.parseLong("1"));
-        appSettings.setCreatedBy(in_db.getCreatedBy());
+        
+        if(in_db !=null){
+         appSettings.setCreatedBy(in_db.getCreatedBy());
+        }
         dao.save(appSettings);
         return appSettings;
     }

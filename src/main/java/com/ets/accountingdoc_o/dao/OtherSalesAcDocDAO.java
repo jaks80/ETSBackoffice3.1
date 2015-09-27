@@ -27,6 +27,18 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     
     public List<OtherSalesAcDoc> findInvoiceByRef(Long... reference);
     
+    public List findOutstandingDocumentsSQL(Enums.AcDocType type, Enums.ClientType clienttype,
+            Long clientid, Date from, Date to);
+    
+    /**
+     * @deprecated 
+     * @param type
+     * @param clienttype
+     * @param clientid
+     * @param dateStart
+     * @param dateEnd
+     * @return 
+     */
     public List<OtherSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type,Enums.ClientType clienttype,Long clientid,Date dateStart,Date dateEnd);      
     
     public List<OtherSalesAcDoc> findInvoiceHistory(Enums.ClientType clienttype,Long clientid,Date dateStart,Date dateEnd);

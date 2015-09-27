@@ -129,7 +129,8 @@ public class OtherSalesAcDocWS {
 
     @GET
     @Path("/acdoc_report")
-    @RolesAllowed("SM")
+    //@RolesAllowed("SM")
+    @PermitAll
     public InvoiceReportOther outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,
@@ -145,7 +146,7 @@ public class OtherSalesAcDocWS {
             dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
         }
 
-        InvoiceReportOther report = service.dueInvoiceReport(doctype,
+        InvoiceReportOther report = service.dueInvoiceReportSQL(doctype,
                 clienttype, clientid, dateFrom, dateTo);
 
         return report;

@@ -7,7 +7,7 @@ import com.ets.pnr.domain.Ticket;
 import com.ets.air.service.AirService;
 import com.ets.settings.service.AppSettingsService;
 import com.ets.util.Enums;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;

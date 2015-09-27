@@ -29,9 +29,9 @@ public class AgentService {
     }
 
     public List<Agent> querySearch(String keyword) {
-     return dao.querySearch(keyword);
+        return dao.querySearch(keyword);
     }
-    
+
     public Agent findByOfficeID(String officeID) {
         List<Agent> agents = dao.findByOfficeID(officeID);
         if (!agents.isEmpty()) {
@@ -75,10 +75,11 @@ public class AgentService {
         return dao.findByKeyword(name, officeID);
     }
 
-    
     public MainAgent saveorUpdate(MainAgent agent) {
         MainAgent in_db = getMainAgent();
-        agent.setCreatedBy(in_db.getCreatedBy());
+        if (in_db != null) {
+            agent.setCreatedBy(in_db.getCreatedBy());
+        }
         //agent.setId(Long.parseLong("1"));
         mainAgentDAO.save(agent);
         return agent;
@@ -93,8 +94,8 @@ public class AgentService {
         Agent agent = dao.findByID(Agent.class, id);
         dao.delete(agent);
     }
-    
+
     public List<Agent> findAgentContainsEmail() {
-     return dao.findAgentContainsEmail();
+        return dao.findAgentContainsEmail();
     }
 }

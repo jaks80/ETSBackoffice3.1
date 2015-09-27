@@ -9,9 +9,10 @@ import com.ets.client.domain.Contactable;
 import com.ets.client.service.AgentService;
 import com.ets.client.service.CustomerService;
 import com.ets.pnr.domain.Ticket;
+import com.ets.pnr.logic.PnrBusinessLogic;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -105,15 +106,13 @@ public class AccountsService {
                     .append(" ")
                     .append(doc.getPnr().getAirLineCode())
                     .append(" ");
-            
-            if (doc.getTickets() != null && !doc.getTickets().isEmpty()) {
-                Ticket leadPax = PnrUtil.calculateLeadPaxTicket(doc.getTickets());
-                sb.append(leadPax.getFullPaxName()).append("/").append(leadPax.getFullTicketNo());
+                        
+                sb.append(doc.getPnr().getLeadPax());
                 
                 if (Enums.AcDocType.INVOICE.equals(doc.getType())) {
-                 sb.append(" ").append(PnrUtil.getOutBoundFlightSummery(doc.getPnr().getSegments()));
+                 sb.append(" ").append(doc.getPnr().getFirstSegment());
                 }
-            }            
+                        
             
             
             if (doc.getRemark() != null) {
@@ -211,11 +210,11 @@ public class AccountsService {
                     .append(" ");
             
             if (doc.getTickets() != null && !doc.getTickets().isEmpty()) {
-                Ticket leadPax = PnrUtil.calculateLeadPaxTicket(doc.getTickets());
+                Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(doc.getTickets());
                 sb.append(leadPax.getFullPaxName()).append("/").append(leadPax.getFullTicketNo());
                 
                 if (Enums.AcDocType.INVOICE.equals(doc.getType())) {
-                 sb.append(" ").append(PnrUtil.getOutBoundFlightSummery(doc.getPnr().getSegments()));
+                 sb.append(" ").append(doc.getPnr().getFirstSegment());
                 }
             }            
             

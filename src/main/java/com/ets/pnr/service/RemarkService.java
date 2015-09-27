@@ -5,7 +5,7 @@ import com.ets.pnr.dao.RemarkDAO;
 import com.ets.pnr.domain.Airline;
 import com.ets.pnr.domain.Remark;
 import com.ets.pnr.model.collection.Airlines;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.util.List;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;

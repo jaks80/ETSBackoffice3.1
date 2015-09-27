@@ -28,6 +28,10 @@ public class Pnr extends PersistentObject implements Serializable {
     @XmlElement
     private Integer noOfPax;
     @XmlElement
+    private String firstSegment;
+    @XmlElement
+    private String leadPax;    
+    @XmlElement
     private String bookingAgtOid;
     @XmlElement
     private String ticketingAgtOid;
@@ -217,11 +221,28 @@ public class Pnr extends PersistentObject implements Serializable {
         return this.ticketingAgtOid.equals(AppSettingsService.mainAgent.getOfficeID());
     }
 
+    @Temporal(javax.persistence.TemporalType.DATE)
     public Date getPnrCancellationDate() {
         return pnrCancellationDate;
     }
 
     public void setPnrCancellationDate(Date pnrCancellationDate) {
         this.pnrCancellationDate = pnrCancellationDate;
+    }
+
+    public String getFirstSegment() {
+        return firstSegment;
+    }
+
+    public void setFirstSegment(String firstSegment) {
+        this.firstSegment = firstSegment;
+    }
+
+    public String getLeadPax() {
+        return leadPax;
+    }
+
+    public void setLeadPax(String leadPax) {
+        this.leadPax = leadPax;
     }
 }

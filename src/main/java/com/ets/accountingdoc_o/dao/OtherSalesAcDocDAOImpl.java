@@ -116,6 +116,80 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
     @Override
     @Transactional(readOnly = true)
+    public List findOutstandingDocumentsSQL(Enums.AcDocType type, Enums.ClientType clienttype,
+            Long clientid, Date from, Date to) {
+
+        String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
+        char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
+
+        String sqlAgent = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference, "
+                + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.name "
+                + "FROM other_sales_acdoc  d "
+                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "                
+                + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
+                + "INNER JOIN agent a ON d.agentid_fk = a.id "
+                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
+                + clientcondition
+                + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
+
+        String sqlCustomer = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference,  "
+                + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.surName as cs, a.foreName as cf "
+                + "FROM other_sales_acdoc d "
+                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
+                + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
+                + "INNER JOIN customer a ON d.customerid_fk = a.id "
+                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
+                + clientcondition
+                + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
+
+        String sqlAll = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference, "
+                + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.name, c.surName as cs, c.foreName as cf "
+                + "FROM other_sales_acdoc d "
+                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "               
+                + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
+                + "LEFT JOIN customer c ON d.customerid_fk = c.id "
+                + "LEFT JOIN agent a ON d.agentid_fk = a.id "
+                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
+                + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
+
+        Query query = null;
+
+        if (Enums.ClientType.AGENT.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlAgent);
+        } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlCustomer);
+        } else {
+            query = getSession().createSQLQuery(sqlAll);
+        }
+
+        if (clienttype!=null) {
+            query.setParameter("clientid", clientid);
+        }
+
+        query.setParameter("from", from);
+        query.setParameter("to", to);
+
+        List results = query.list();
+  
+        return results;
+    }
+    /**
+     * @deprecated 
+     * @param type
+     * @param clienttype
+     * @param clientid
+     * @param from
+     * @param to
+     * @return 
+     */
+    @Override
+    @Transactional(readOnly = true)
     public List<OtherSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid, Date from, Date to) {
         String concatClient = "";
         String dateCondition = "";

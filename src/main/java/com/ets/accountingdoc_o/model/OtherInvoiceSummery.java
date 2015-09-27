@@ -29,7 +29,7 @@ public class OtherInvoiceSummery implements Serializable {
     @XmlElement
     private Enums.AcDocType type;
     @XmlElement
-    private Enums.AcDocStatus status;
+    private String status;
     @XmlElement
     private BigDecimal documentedAmount;
     @XmlElement
@@ -71,11 +71,11 @@ public class OtherInvoiceSummery implements Serializable {
         this.type = type;
     }
 
-    public Enums.AcDocStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(Enums.AcDocStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

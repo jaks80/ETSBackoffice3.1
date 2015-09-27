@@ -184,11 +184,10 @@ public class TicketingSalesAcDocWS {
             dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
         }
 
-        InvoiceReport report = service.dueInvoiceReport(doctype,
-                clienttype, clientid, dateFrom, dateTo);
+        InvoiceReport report = service.dueInvoiceReportSQL(doctype, clienttype, clientid, dateFrom, dateTo);
         return report;
     }
-
+    
     @GET
     @Path("/paymentdue_flight")
     @RolesAllowed("GS")

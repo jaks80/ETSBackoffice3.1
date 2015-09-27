@@ -2,7 +2,7 @@ package com.ets.pnr.model;
 
 import com.ets.pnr.domain.Ticket;
 import com.ets.util.Enums.TicketStatus;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,5 +1,6 @@
 package com.ets.accountingdoc_o.service;
 
+import com.ets.Application;
 import com.ets.accountingdoc.domain.*;
 import com.ets.accountingdoc_o.dao.*;
 import com.ets.accountingdoc_o.model.*;
@@ -12,6 +13,7 @@ import com.ets.settings.domain.User;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -167,6 +169,121 @@ public class OSalesAcDocService {
         return report;
     }
 
+        public InvoiceReportOther dueInvoiceReportSQL(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid,
+            Date dateStart, Date dateEnd) {
+
+        BigDecimal totalInvAmount = new BigDecimal("0.00");
+        BigDecimal totalDMAmount = new BigDecimal("0.00");
+        BigDecimal totalCMAmount = new BigDecimal("0.00");
+        BigDecimal totalDue = new BigDecimal("0.00");
+        BigDecimal totalPayment = new BigDecimal("0.00");
+        BigDecimal totalRefund = new BigDecimal("0.00");
+
+        List results = dao.findOutstandingDocumentsSQL(type, clienttype, clientid, dateStart, dateEnd);
+        List<OtherInvoiceSummery> invoices = new ArrayList<>();
+
+        Iterator it = results.iterator();
+        while (it.hasNext()) {
+            OtherInvoiceSummery s = new OtherInvoiceSummery();
+
+            Object[] objects = (Object[]) it.next();
+            BigInteger bid = new BigInteger(objects[0].toString());
+            s.setId(bid.longValue());
+            
+            Date date = (Date) objects[1];
+            s.setDocIssueDate(DateUtil.dateToString(date));
+            
+            s.setRemark((String) objects[2]);
+            s.setStatus(Enums.AcDocStatus.valueOf(Integer.valueOf(objects[3].toString())));
+            
+            BigInteger ref = new BigInteger(objects[4].toString());
+            s.setReference(ref.longValue());
+
+            BigDecimal invoiceAmount = (BigDecimal) objects[5];
+            s.setDocumentedAmount(invoiceAmount);
+            
+            BigDecimal dueAmount = (BigDecimal) objects[6];
+            s.setDue(dueAmount);
+
+            String type_ = (String) objects[7];
+            s.setType(Enums.AcDocType.INVOICE);
+            
+            if (type_ != null) {
+                
+                char[] types = type_.replaceAll(",", "").toCharArray();
+
+                String amount_ = (String) objects[8];
+                String[] amounts = amount_.split(",");
+
+                BigDecimal payment = new BigDecimal("0.00");
+                BigDecimal refund = new BigDecimal("0.00");
+                BigDecimal debitMemo = new BigDecimal("0.00");
+                BigDecimal creditMemo = new BigDecimal("0.00");
+
+                for (int i = 0; i < types.length; i++) {
+
+                    int c = Character.getNumericValue(types[i]);
+
+                    if (c == Enums.AcDocType.PAYMENT.getId()) {
+                        payment = payment.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.REFUND.getId()) {
+                        refund = refund.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.CREDITMEMO.getId()) {
+                        creditMemo = creditMemo.add(new BigDecimal(amounts[i]));
+                    } else if (c == Enums.AcDocType.DEBITMEMO.getId()) {
+                        debitMemo = debitMemo.add(new BigDecimal(amounts[i]));
+                    }
+                }
+
+                totalInvAmount = totalInvAmount.add(invoiceAmount);
+                totalDMAmount = totalDMAmount.add(debitMemo);
+                totalCMAmount = totalCMAmount.add(creditMemo);
+                totalPayment = totalPayment.add(payment);
+                totalRefund = totalRefund.add(refund);
+                totalDue = totalDue.add(dueAmount);
+
+                s.setPayment(payment.add(refund));
+                s.setOtherAmount(creditMemo.add(debitMemo));
+            }
+
+            s.setInvBy((String) objects[9] + "/" + (String) objects[10]);
+
+            if (Enums.ClientType.AGENT.equals(clienttype)) {
+                s.setClientName((String) objects[11]);
+            } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+                s.setClientName((String) objects[11] + "/" + objects[12]);
+            } else {
+                String name = (String) objects[11];
+                if (name != null && !name.isEmpty()) {
+                    s.setClientName(name);
+                } else {
+                    s.setClientName((String) objects[12] + "/" + objects[13]);
+                }
+            }
+
+            invoices.add(s);
+        }
+
+        InvoiceReportOther report = new InvoiceReportOther();
+        if (dateStart != null && dateEnd != null) {
+            report.setDateFrom(DateUtil.dateToString(dateStart));
+            report.setDateTo(DateUtil.dateToString(dateEnd));
+        }
+        report.setInvoices(invoices);
+        
+        String currency = Application.currency();
+        
+        report.setTotalInvAmount(currency + totalInvAmount.toString());
+        report.setTotalCMAmount(currency + totalCMAmount.toString());
+        report.setTotalDMAmount(currency + totalDMAmount.toString());
+        report.setTotalDue(currency + totalDue.toString());
+        report.setTotalPayment(currency + totalPayment.abs().toString());
+        report.setTotalRefund(currency + totalRefund.abs().toString());
+
+        report.setTitle("Outstanding Invoice Report");
+        return report;
+    }
+        
     private OtherSalesAcDoc undefineChildren(OtherSalesAcDoc doc) {
 
         Set<OtherSalesAcDoc> relatedDocs = AcDocUtil.filterVoidRelatedDocumentsOther(doc.getRelatedDocuments());

@@ -96,7 +96,7 @@ public class InvoiceReportOther implements Serializable {
             invSummery.setNoOfItems(invoice.getAccountingDocumentLines().size());
             
             invSummery.setReference(invoice.getReference());
-            invSummery.setStatus(invoice.getStatus());
+            invSummery.setStatus(invoice.getStatus().toString());
             invSummery.setType(invoice.getType());
             
             invSummery.setDocumentedAmount(invoice.getDocumentedAmount());

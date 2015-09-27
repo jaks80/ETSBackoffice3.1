@@ -158,6 +158,87 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
 
     @Override
     @Transactional(readOnly = true)
+    public List findOutstandingDocumentsSQL(Enums.AcDocType type, Enums.ClientType clienttype,
+            Long clientid, Date from, Date to) {
+
+        String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
+        char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
+
+        String sqlAgent = "SELECT t.id, t.docIssueDate, t1.reference, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.name "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN tkt_sales_acdoc t1 ON t1.reference = t.reference AND t1.status = 0 "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
+                + "INNER JOIN agent a ON pnr.agentid_fk = a.id "
+                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
+                + clientcondition
+                + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
+
+        String sqlCustomer = "SELECT t.id, t.docIssueDate, t1.reference, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.surName as cs, a.foreName as cf "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN tkt_sales_acdoc t1 ON t1.reference = t.reference AND t1.status = 0 "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
+                + "INNER JOIN customer a ON pnr.customerid_fk = a.id "
+                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
+                + clientcondition
+                + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
+
+        String sqlAll = "SELECT t.id, t.docIssueDate, t1.reference, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
+                + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
+                + "created_by.surName, created_by.foreName, a.name, c.surName as cs, c.foreName as cf "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN tkt_sales_acdoc t1 ON t1.reference = t.reference AND t1.status = 0 "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
+                + "LEFT JOIN customer c ON pnr.customerid_fk = c.id "
+                + "LEFT JOIN agent a ON pnr.agentid_fk = a.id "
+                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
+                + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
+
+        Query query = null;
+
+        if (Enums.ClientType.AGENT.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlAgent);
+        } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlCustomer);
+        } else {
+            query = getSession().createSQLQuery(sqlAll);
+        }
+
+        if (clienttype!=null) {
+            query.setParameter("clientid", clientid);
+        }
+
+        query.setParameter("from", from);
+        query.setParameter("to", to);
+
+        List results = query.list();
+  
+        return results;
+    }
+
+    /**
+     * @deprecated 
+     * @param type
+     * @param clienttype
+     * @param clientid
+     * @param from
+     * @param to
+     * @return 
+     */
+    @Override
+    @Transactional(readOnly = true)
     public List<TicketingSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype,
             Long clientid, Date from, Date to) {
 
@@ -210,13 +291,13 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             query.setParameter("to", to);
         }
 
-        List<TicketingSalesAcDoc> dueInvoices = query.list();        
+        List<TicketingSalesAcDoc> dueInvoices = query.list();
         return dueInvoices;
     }
-    
+
     @Override
     @Transactional(readOnly = true)
-    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype,Long clientid, Date from, Date to) {
+    public List<TicketingSalesAcDoc> findActiveUnDueInvoices(Enums.ClientType clienttype, Long clientid, Date from, Date to) {
 
         String concatClient = "";
         String dateCondition = "";
@@ -260,7 +341,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             query.setParameter("to", to);
         }
 
-        List<TicketingSalesAcDoc> dueInvoices = query.list();        
+        List<TicketingSalesAcDoc> dueInvoices = query.list();
         return dueInvoices;
     }
 
@@ -383,7 +464,6 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         return invoice_history;
     }
 
-    
     @Override
     public TicketingSalesAcDoc voidSimpleDocument(TicketingSalesAcDoc doc) {
         doc.setStatus(Enums.AcDocStatus.VOID);
@@ -423,10 +503,9 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             doc.setAdditionalChargeLines(null);
         }
         doc.setStatus(Enums.AcDocStatus.VOID);
-        doc.setDocumentedAmount(new BigDecimal("0.00"));
         save(doc);
 
-        //5. Delete/VOID purchase doc as its goin to be created agian while saving sales document.
+        //5. Delete/VOID purchase doc as its going to be created agian while saving sales document.
         if (purchaseDoc != null) {
             //purchaseDoc = tPurchaseAcDocDAO.getWithChildrenById(purchaseDoc.getId());
             tPurchaseAcDocDAO.voidDocument(purchaseDoc);
@@ -584,58 +663,9 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         return result;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<String> outstandingAgentsName() {
-        String sql = "select agt.name as agentname, agt.id as id "
-                + "from tkt_sales_acdoc invoice "
-                + "left outer join pnr p on invoice.pnr_fk=p.id "
-                + "inner join agent agt on p.agentid_fk=agt.id "
-                + "where invoice.status<>2 and invoice.type=0 and (select sum(ticketings4_.documentedAmount) from tkt_sales_acdoc ticketings4_ where invoice.reference=ticketings4_.reference and ticketings4_.status<>2 group by ticketings4_.reference)>0 "
-                + "group by agt.id order by agentname asc";
-
-        Query query = getSession().createSQLQuery(sql);
-
-        List results = query.list();
-        List<String> agents = new ArrayList<>();
-
-        Iterator it = results.iterator();
-        while (it.hasNext()) {
-            Object[] objects = (Object[]) it.next();
-            agents.add((String) objects[0] + "-" + (String) objects[1]);
-        }
-        return agents;
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<String> outstandingCusotmersName() {
-        String sql = "select cust.surName as surName,cust.foreName as foreName, cust.id as id "
-                + "from tkt_sales_acdoc invoice "
-                + "left outer join pnr p on invoice.pnr_fk=p.id "
-                + "inner join customer cust on p.customerid_fk=cust.id "
-                + "where invoice.status<>2 and invoice.type=0 and "
-                + "(select sum(ticketings4_.documentedAmount) from tkt_sales_acdoc ticketings4_ where invoice.reference=ticketings4_.reference and ticketings4_.status<>2 group by ticketings4_.reference)>0 "
-                + "group by cust.id order by surName asc";
-
-        Query query = getSession().createSQLQuery(sql);
-
-        List results = query.list();
-        List<String> customers = new ArrayList<>();
-
-        Iterator it = results.iterator();
-        while (it.hasNext()) {
-            Object[] objects = (Object[]) it.next();
-            customers.add((String) objects[0] + "/" + (String) objects[1] + "-" + (String) objects[2]);
-        }
-        return customers;
-    }
-
     /**
-     * @deprecated 
-     * @param acDocType
-     * @return 
+     * @deprecated @param acDocType
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -663,7 +693,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         List<Agent> agents = query.list();
         return agents;
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType) {
@@ -676,7 +706,8 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             operator = '>';//To get outstanding invoice
         }
 
-        String sql = "SELECT a.id, a.name, a.addLine1,a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo, a.officeID,  SUM(t.documentedAmount) AS balance "
+        String sql = "SELECT a.id, a.name, a.addLine1,a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, "
+                + "a.telNo, a.officeID,  SUM(t.documentedAmount) AS balance "
                 + "FROM tkt_sales_acdoc t "
                 + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
                 + "INNER JOIN agent a ON pnr.agentid_fk = a.id "
@@ -686,18 +717,18 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
 
         Query query = getSession().createSQLQuery(sql);
         List results = query.list();
-        
+
         Iterator it = results.iterator();
-        Map<Long,Agent> agents = new LinkedHashMap<>();
-        
+        Map<Long, Agent> agents = new LinkedHashMap<>();
+
         while (it.hasNext()) {
             Object[] objects = (Object[]) it.next();
-            
+
             Agent a = new Agent();
-            
-            BigInteger bid = new BigInteger(objects[0].toString());            
+
+            BigInteger bid = new BigInteger(objects[0].toString());
             a.setId(bid.longValue());
-            
+
             a.setName((String) objects[1]);
             a.setAddLine1((String) objects[2]);
             a.setAddLine2((String) objects[3]);
@@ -708,14 +739,14 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             a.setMobile((String) objects[8]);
             a.setPostCode((String) objects[9]);
             a.setTelNo((String) objects[10]);
-            a.setOfficeID((String) objects[11]);            
-            
+            a.setOfficeID((String) objects[11]);
+
             agents.put(a.getId(), a);
-        }  
-        
+        }
+
         return new ArrayList<>(agents.values());
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<Customer> outstandingCustomersSQL(Enums.AcDocType acDocType) {
@@ -739,18 +770,18 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
 
         Query query = getSession().createSQLQuery(sql);
         List results = query.list();
-        
+
         Iterator it = results.iterator();
-        Map<Long,Customer> customers = new LinkedHashMap<>();
-        
+        Map<Long, Customer> customers = new LinkedHashMap<>();
+
         while (it.hasNext()) {
             Object[] objects = (Object[]) it.next();
-            
+
             Customer a = new Customer();
-            
-            BigInteger bid = new BigInteger(objects[0].toString());            
+
+            BigInteger bid = new BigInteger(objects[0].toString());
             a.setId(bid.longValue());
-            
+
             a.setForeName((String) objects[1]);
             a.setSurName((String) objects[2]);
             a.setContactPerson((String) objects[3]);
@@ -762,18 +793,17 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             a.setFax((String) objects[9]);
             a.setMobile((String) objects[10]);
             a.setPostCode((String) objects[11]);
-            a.setTelNo((String) objects[12]);            
-            
+            a.setTelNo((String) objects[12]);
+
             customers.put(a.getId(), a);
-        }  
-        
+        }
+
         return new ArrayList<>(customers.values());
     }
-    
+
     /**
-     * @deprecated 
-     * @param acDocType
-     * @return 
+     * @deprecated @param acDocType
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -803,13 +833,13 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
 
     @Override
     public List<TicketingSalesAcDoc> findInvoiceByRef(Long... references) {
-        String hql = "select distinct a from TicketingSalesAcDoc as a "                
+        String hql = "select distinct a from TicketingSalesAcDoc as a "
                 + "left join fetch a.relatedDocuments as r "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.pnr as p "
                 + "left join fetch a.createdBy as user "
                 + "left join fetch p.segments "
-                + "left join fetch p.agent  "        
+                + "left join fetch p.agent  "
                 + "left join fetch p.customer  "
                 + "where a.type = 0 and a.reference in (:references)";
 

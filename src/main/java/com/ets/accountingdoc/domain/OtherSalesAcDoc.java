@@ -46,6 +46,10 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
     private Set<OtherSalesAcDoc> relatedDocuments = new LinkedHashSet<>();
     @XmlElement
     private OtherSalesAcDoc parent;
+    @XmlElement
+    private int itemQty;
+    @XmlElement
+    private String category;
 
     @XmlElement
     private Payment payment;
@@ -226,5 +230,33 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
     @Override
     public BigDecimal calculateTicketedSubTotal() {
         throw new UnsupportedOperationException("Not supported yet."); 
+    }
+
+    /**
+     * @return the itemQty
+     */
+    public int getItemQty() {
+        return itemQty;
+    }
+
+    /**
+     * @param itemQty the itemQty to set
+     */
+    public void setItemQty(int itemQty) {
+        this.itemQty = itemQty;
+    }
+
+    /**
+     * @return the category
+     */
+    public String getCategory() {
+        return category;
+    }
+
+    /**
+     * @param category the category to set
+     */
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

@@ -3,7 +3,6 @@ package com.ets.accountingdoc.dao;
 import com.ets.GenericDAO;
 import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
 import com.ets.client.domain.Agent;
-import com.ets.client.domain.Customer;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -30,7 +29,17 @@ public interface TPurchaseAcDocDAO extends GenericDAO<TicketingPurchaseAcDoc, Lo
 
     public List<TicketingPurchaseAcDoc> findInvoiceByRef(Long... reference);
 
+    /**
+     * @deprecated 
+     * @param type
+     * @param agentid
+     * @param dateStart
+     * @param dateEnd
+     * @return 
+     */
     public List<TicketingPurchaseAcDoc> findOutstandingInvoice(Enums.AcDocType type, Long agentid, Date dateStart, Date dateEnd);
+    
+    public List findOutstandingInvoiceSQL(Enums.AcDocType type, Long agentid, Date dateStart, Date dateEnd);
 
     public List<TicketingPurchaseAcDoc> findOutstandingBSPInvoice(Long agentid, Date dateStart, Date dateEnd);
 
@@ -46,7 +55,14 @@ public interface TPurchaseAcDocDAO extends GenericDAO<TicketingPurchaseAcDoc, Lo
 
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
                    
+    /**
+     * @deprecated 
+     * @param acDocType
+     * @return 
+     */
     public List<Agent> outstandingAgents(Enums.AcDocType acDocType);    
+    
+    public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType);
     
     public List<Agent> findTicketingAgents();
 }

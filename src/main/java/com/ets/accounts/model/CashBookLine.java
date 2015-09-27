@@ -120,5 +120,4 @@ public class CashBookLine implements Serializable {
     public void setCashier(String cashier) {
         this.cashier = cashier;
     }
-
 }

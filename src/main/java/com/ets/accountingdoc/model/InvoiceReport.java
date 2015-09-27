@@ -6,11 +6,10 @@ import com.ets.accountingdoc.service.AcDocUtil;
 import com.ets.client.domain.Contactable;
 import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Ticket;
-import com.ets.report.model.Letterhead;
-import com.ets.settings.service.AppSettingsService;
+import com.ets.pnr.logic.PnrBusinessLogic;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -101,7 +100,7 @@ public class InvoiceReport implements Serializable {
 
             Set<Ticket> tickets = invoice.getTickets();
             if (tickets != null && !tickets.isEmpty()) {
-                Ticket leadPax = PnrUtil.calculateLeadPaxTicket(tickets);
+                Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(tickets);
                 invSummery.setLeadPsgr(leadPax.getFullPaxName() + "/" + leadPax.getFullTicketNo());
             }
 
@@ -110,7 +109,7 @@ public class InvoiceReport implements Serializable {
             invSummery.setReference(invoice.getReference());
             invSummery.setStatus(invoice.getStatus());
             invSummery.setType(invoice.getType());
-            invSummery.setOutBoundDetails(PnrUtil.getOutBoundFlightSummery(invoice.getPnr().getSegments()));
+            invSummery.setOutBoundDetails(invoice.getPnr().getFirstSegment());
 
             invSummery.setDocumentedAmount(invoice.getDocumentedAmount());
             invSummery.setOtherAmount(invoice.calculateTotalDebitMemo().add(invoice.calculateTotalCreditMemo()));
@@ -183,14 +182,16 @@ public class InvoiceReport implements Serializable {
             invSummery.setDocIssueDate(DateUtil.dateToString(invoice.getDocIssueDate()));
             invSummery.setGdsPnr(invoice.getPnr().getGdsPnr());
             invSummery.setNoOfPax(invoice.getPnr().getNoOfPax());
-            invSummery.setLeadPsgr(PnrUtil.calculatePartialName(PnrUtil.calculateLeadPaxName(
-                    invoice.getTickets())));
+            
+            String leadPax = invoice.getPnr().getLeadPax();
+            invSummery.setLeadPsgr(PnrUtil.calculatePartialName(leadPax));
+            
             invSummery.setAirLine(invoice.getPnr().getAirLineCode());
             invSummery.setPnr_id(invoice.getPnr().getId());
             invSummery.setReference(invoice.getReference());
             invSummery.setStatus(invoice.getStatus());
             invSummery.setType(invoice.getType());
-            invSummery.setOutBoundDetails(PnrUtil.getOutBoundFlightSummery(invoice.getPnr().getSegments()));
+            invSummery.setOutBoundDetails(invoice.getPnr().getFirstSegment());
             invSummery.setDocumentedAmount(invoice.getDocumentedAmount());
             invSummery.setOtherAmount(invoice.calculateTotalDebitMemo().add(invoice.calculateTotalCreditMemo()));
             invSummery.setPayment(invoice.calculateTotalPayment().add(invoice.calculateTotalRefund()).abs());

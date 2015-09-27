@@ -5,10 +5,11 @@ import com.ets.pnr.model.collection.Pnrs;
 import com.ets.pnr.dao.PnrDAO;
 import com.ets.pnr.domain.Itinerary;
 import com.ets.pnr.domain.Pnr;
+import com.ets.pnr.logic.PnrBusinessLogic;
 import com.ets.pnr.model.ATOLCertificate;
 import com.ets.settings.service.AppSettingsService;
 import com.ets.util.DateUtil;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +39,7 @@ public class PnrService {
 
     public String delete(Long id, Date today) {
         Pnr pnr = getByIdWithChildren(id);
-        Itinerary firstSegment = PnrUtil.getFirstSegment(pnr.getSegments());
+        Itinerary firstSegment = PnrBusinessLogic.getFirstSegment(pnr.getSegments());
         
         if (firstSegment.getDeptDate().after(today)) {
             dao.delete(pnr);

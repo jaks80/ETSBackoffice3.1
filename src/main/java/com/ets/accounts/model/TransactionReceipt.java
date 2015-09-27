@@ -9,10 +9,11 @@ import com.ets.accounts.domain.Payment;
 import com.ets.client.domain.Contactable;
 import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Ticket;
+import com.ets.pnr.logic.PnrBusinessLogic;
 import com.ets.report.model.Letterhead;
 import com.ets.settings.service.AppSettingsService;
 import com.ets.util.DateUtil;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,12 +96,12 @@ public class TransactionReceipt {
                     sum.setParentId(d.getParent().getId());
                     Set<Ticket> tickets = d.getParent().getTickets();
                     if (tickets != null && !tickets.isEmpty()) {
-                        Ticket leadPax = PnrUtil.calculateLeadPaxTicket(tickets);
+                        Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(tickets);
                         sum.setLeadPsgr(leadPax.getFullPaxName() + "/" + leadPax.getFullTicketNo());
                     }
                 }
 
-                sum.setOutBoundDetails(PnrUtil.getOutBoundFlightSummery(d.getPnr().getSegments()));
+                sum.setOutBoundDetails(d.getPnr().getFirstSegment());
 
                 lines.add(sum);
                 total = total.add(d.getDocumentedAmount().abs());
@@ -146,7 +147,7 @@ public class TransactionReceipt {
                     sum.setParentId(d.getParent().getId());
                     Set<Ticket> tickets = d.getParent().getTickets();
                     if (tickets != null && !tickets.isEmpty()) {
-                        Ticket leadPax = PnrUtil.calculateLeadPaxTicket(tickets);
+                        Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(tickets);
                         sum.setLeadPsgr(leadPax.getFullPaxName() + "/" + leadPax.getFullTicketNo());
                     }
                 }
@@ -182,7 +183,7 @@ public class TransactionReceipt {
                 sum.setReference(d.getReference());
                 sum.setRemark(d.getRemark());
                 sum.setDocumentedAmount(d.getDocumentedAmount().abs());
-                sum.setStatus(d.getStatus());
+                sum.setStatus(d.getStatus().toString());
                 olines.add(sum);
                 total = total.add(d.getDocumentedAmount());
 

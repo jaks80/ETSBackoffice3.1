@@ -11,7 +11,7 @@ import com.ets.accounts.logic.PaymentLogic;
 import com.ets.security.LoginManager;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.annotation.Resource;

@@ -7,10 +7,11 @@ import com.ets.client.domain.Agent;
 import com.ets.client.service.AgentService;
 import com.ets.pnr.dao.*;
 import com.ets.pnr.domain.*;
+import com.ets.pnr.logic.PnrBusinessLogic;
 import com.ets.pnr.service.AirlineService;
 import com.ets.pnr.service.TicketService;
 import com.ets.util.Enums;
-import com.ets.util.PnrUtil;
+import com.ets.pnr.logic.PnrUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -150,6 +151,11 @@ public class AirService {
     }
 
     public void save(Pnr pnr) {
+        pnr.setFirstSegment(PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments()));
+        
+        Ticket leadPaxTicket = PnrBusinessLogic.calculateLeadPaxTicket(pnr.getTickets());
+        pnr.setLeadPax(leadPaxTicket.getSurName()+"/"+leadPaxTicket.getForeName()+"/"+leadPaxTicket.getFullTicketNo());
+        
         dao.save(pnr);
     }
 

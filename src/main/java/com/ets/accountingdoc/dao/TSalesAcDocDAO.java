@@ -39,9 +39,9 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
 
     public TicketingSalesAcDoc voidTicketedDocument(TicketingSalesAcDoc doc);
 
-    public List<String> outstandingAgentsName();
+    //public List<String> outstandingAgentsName();
 
-    public List<String> outstandingCusotmersName();
+    //public List<String> outstandingCusotmersName();
 
     /**
      * @deprecated 
@@ -65,6 +65,9 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
 
     public List<TicketingSalesAcDoc> findArchivedInvoices(Enums.ClientType clienttype, Long clientid, Date from, Date to);
 
+    public List findOutstandingDocumentsSQL(Enums.AcDocType type, Enums.ClientType clienttype,
+            Long clientid, Date from, Date to);
+    
     public List<TicketingSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd);
 
     public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype, Long clientid, Date dateFrom, Date dateEnd);
