@@ -27,6 +27,23 @@ public class PnrService {
     @Resource(name = "pnrDAO")
     private PnrDAO dao;
 
+    public void updatePnrSegmentAndLeadPax(String issueDateFrom, String issueDateTo) {
+
+        Date dateFrom = DateUtil.stringToDate(issueDateFrom, "ddMMMyyyy");
+        Date dateTo = DateUtil.stringToDate(issueDateTo, "ddMMMyyyy");
+
+        List<Pnr> pnrList = dao.find(dateFrom, dateTo, null, null);
+        System.out.println("Found:"+pnrList.size());
+        int i = 0;
+        for (Pnr pnr : pnrList) {
+            String segment = PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments());
+            String leadPax = PnrBusinessLogic.calculateLeadPaxName(pnr.getTickets());
+            int status = dao.updatePnrSegmentAndLeadPax(segment, leadPax, pnr.getId());
+            i++;
+            System.out.println("Updated:"+i);
+        }
+    }
+
     public void save(Pnr pnr) {
         PnrUtil.initPnrChildren(pnr);
         dao.save(pnr);
@@ -39,9 +56,9 @@ public class PnrService {
 
     public String delete(Long id, Date today) {
         Pnr pnr = getByIdWithChildren(id);
-        Itinerary firstSegment = PnrBusinessLogic.getFirstSegment(pnr.getSegments());
-        
-        if (firstSegment.getDeptDate().after(today)) {
+        Itinerary flightSummery = PnrBusinessLogic.getFirstSegment(pnr.getSegments());
+
+        if (flightSummery.getDeptDate().after(today)) {
             dao.delete(pnr);
             return "Deleted";
         } else {
@@ -67,7 +84,6 @@ public class PnrService {
         return list;
     }
 
-    
     public List<Pnr> getByInvRef(String invref) {
         List<Pnr> list = new ArrayList<>();
         list = dao.getByInvRef(invref);

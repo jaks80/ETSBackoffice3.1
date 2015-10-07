@@ -151,7 +151,7 @@ public class AirService {
     }
 
     public void save(Pnr pnr) {
-        pnr.setFirstSegment(PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments()));
+        pnr.setFlightSummery(PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments()));
         
         Ticket leadPaxTicket = PnrBusinessLogic.calculateLeadPaxTicket(pnr.getTickets());
         pnr.setLeadPax(leadPaxTicket.getSurName()+"/"+leadPaxTicket.getForeName()+"/"+leadPaxTicket.getFullTicketNo());

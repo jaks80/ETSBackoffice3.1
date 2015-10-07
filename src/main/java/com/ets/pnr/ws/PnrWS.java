@@ -7,6 +7,7 @@ import com.ets.pnr.service.PnrService;
 import com.ets.util.DateUtil;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -42,6 +43,13 @@ public class PnrWS {
         return pnr;
     }
 
+    @GET
+    @Path("/updatepnr")
+    @PermitAll
+    public void updatePnrSegmentAndLeadPax(@QueryParam("dateStart") String dateStart,@QueryParam("dateEnd") String dateEnd) {
+       service.updatePnrSegmentAndLeadPax(dateStart, dateEnd);
+    }
+    
     @DELETE
     @Path("/delete/{id}")
     @RolesAllowed("SM")

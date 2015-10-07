@@ -47,7 +47,7 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
     @XmlElement
     private OtherSalesAcDoc parent;
     @XmlElement
-    private int itemQty;
+    private Integer itemQuantity;
     @XmlElement
     private String category;
 
@@ -167,7 +167,7 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
         this.relatedDocuments = relatedDocuments;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_fk")
     public OtherSalesAcDoc getParent() {
         return parent;
@@ -232,31 +232,19 @@ public class OtherSalesAcDoc extends AccountingDocument implements Serializable 
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
-    /**
-     * @return the itemQty
-     */
-    public int getItemQty() {
-        return itemQty;
-    }
-
-    /**
-     * @param itemQty the itemQty to set
-     */
-    public void setItemQty(int itemQty) {
-        this.itemQty = itemQty;
-    }
-
-    /**
-     * @return the category
-     */
     public String getCategory() {
         return category;
     }
 
-    /**
-     * @param category the category to set
-     */
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public Integer getItemQuantity() {
+        return itemQuantity;
+    }
+
+    public void setItemQuantity(Integer itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 }

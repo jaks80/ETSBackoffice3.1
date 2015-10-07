@@ -165,7 +165,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
         String sqlAgent = "SELECT t.id, t.docIssueDate, t1.reference, "
-                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.flightSummery, pnr.leadPax, pnr.airLineCode, "
                 + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.name "
@@ -179,7 +179,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         String sqlCustomer = "SELECT t.id, t.docIssueDate, t1.reference, "
-                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.flightSummery, pnr.leadPax, pnr.airLineCode, "
                 + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.surName as cs, a.foreName as cf "
@@ -193,7 +193,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         String sqlAll = "SELECT t.id, t.docIssueDate, t1.reference, "
-                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.flightSummery, pnr.leadPax, pnr.airLineCode, "
                 + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.name, c.surName as cs, c.foreName as cf "

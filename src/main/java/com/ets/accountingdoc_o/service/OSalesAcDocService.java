@@ -31,6 +31,19 @@ public class OSalesAcDocService {
     @Resource(name = "accountingDocumentLineDAO")
     private AccountingDocumentLineDAO lineDao;
 
+    public void fixDB() {
+        
+        List<OtherSalesAcDoc> docs = dao.findAllDocuments();
+
+        for (OtherSalesAcDoc d : docs) {
+            Set<AccountingDocumentLine> lines = d.getAccountingDocumentLines();
+            if (lines.size() > 0) {
+                System.out.println("Id:"+d.getId()+" Qty: "+lines.size()+" Cat: "+lines.iterator().next().getOtherService().getCategory().getTitle());
+                dao.update(lines.size(), lines.iterator().next().getOtherService().getCategory().getTitle(), d.getId());
+            }
+        }
+    }
+
     public synchronized OtherSalesAcDoc newDocument(OtherSalesAcDoc doc) throws ClientNotFoundException {
 
         if (doc.getAgent() == null && doc.getCustomer() == null) {
@@ -38,9 +51,14 @@ public class OSalesAcDocService {
         }
 
         if (doc.getReference() == null && doc.getType().equals(Enums.AcDocType.INVOICE)) {
-            //if (doc.getReference() == null) {
+
             doc.setReference(AcDocUtil.generateAcDocRef(dao.getNewAcDocRef()));
-            //}
+            Set<AccountingDocumentLine> lines = doc.getAccountingDocumentLines();
+            if (lines.isEmpty()) {
+                return doc;
+            } else {
+
+            }
         }
 
         if (doc.getAdditionalChargeLines() != null && !doc.getAdditionalChargeLines().isEmpty()) {
@@ -89,13 +107,12 @@ public class OSalesAcDocService {
         return invoices;
     }
 
-   public InvoiceReportOther findInvoiceSummeryByReference(Long... refNo) {
+    public InvoiceReportOther findInvoiceSummeryByReference(Long... refNo) {
         List<OtherSalesAcDoc> invoices = dao.findInvoiceByRef(refNo);
         InvoiceReportOther report = InvoiceReportOther.serializeToSalesSummery(null, invoices, null, null);
         report.setTitle("Invoice Report");
         return report;
     }
- 
 
     public boolean delete(Long id) {
         OtherSalesAcDoc doc = dao.getWithChildrenById(id);
@@ -103,9 +120,9 @@ public class OSalesAcDocService {
         return true;
     }
 
-    public boolean deleteLine(Long id,Long userid) {
+    public boolean deleteLine(Long id, Long userid) {
         boolean success = false;
-        lineDao.deleteLine(id,userid);                
+        lineDao.deleteLine(id, userid);
         success = true;
         return success;
     }
@@ -169,7 +186,7 @@ public class OSalesAcDocService {
         return report;
     }
 
-        public InvoiceReportOther dueInvoiceReportSQL(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid,
+    public InvoiceReportOther dueInvoiceReportSQL(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid,
             Date dateStart, Date dateEnd) {
 
         BigDecimal totalInvAmount = new BigDecimal("0.00");
@@ -189,30 +206,33 @@ public class OSalesAcDocService {
             Object[] objects = (Object[]) it.next();
             BigInteger bid = new BigInteger(objects[0].toString());
             s.setId(bid.longValue());
-            
+
             Date date = (Date) objects[1];
             s.setDocIssueDate(DateUtil.dateToString(date));
-            
+
             s.setRemark((String) objects[2]);
             s.setStatus(Enums.AcDocStatus.valueOf(Integer.valueOf(objects[3].toString())));
-            
-            BigInteger ref = new BigInteger(objects[4].toString());
+
+            s.setNoOfItems((Integer) objects[4]);
+            s.setCategory((String) objects[5]);
+
+            BigInteger ref = new BigInteger(objects[6].toString());
             s.setReference(ref.longValue());
 
-            BigDecimal invoiceAmount = (BigDecimal) objects[5];
+            BigDecimal invoiceAmount = (BigDecimal) objects[7];
             s.setDocumentedAmount(invoiceAmount);
-            
-            BigDecimal dueAmount = (BigDecimal) objects[6];
+
+            BigDecimal dueAmount = (BigDecimal) objects[8];
             s.setDue(dueAmount);
 
-            String type_ = (String) objects[7];
+            String type_ = (String) objects[9];
             s.setType(Enums.AcDocType.INVOICE);
-            
+
             if (type_ != null) {
-                
+
                 char[] types = type_.replaceAll(",", "").toCharArray();
 
-                String amount_ = (String) objects[8];
+                String amount_ = (String) objects[10];
                 String[] amounts = amount_.split(",");
 
                 BigDecimal payment = new BigDecimal("0.00");
@@ -246,18 +266,18 @@ public class OSalesAcDocService {
                 s.setOtherAmount(creditMemo.add(debitMemo));
             }
 
-            s.setInvBy((String) objects[9] + "/" + (String) objects[10]);
+            s.setInvBy((String) objects[11] + "/" + (String) objects[12]);
 
             if (Enums.ClientType.AGENT.equals(clienttype)) {
-                s.setClientName((String) objects[11]);
+                s.setClientName((String) objects[13]);
             } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
-                s.setClientName((String) objects[11] + "/" + objects[12]);
+                s.setClientName((String) objects[13] + "/" + objects[14]);
             } else {
-                String name = (String) objects[11];
+                String name = (String) objects[13];
                 if (name != null && !name.isEmpty()) {
                     s.setClientName(name);
                 } else {
-                    s.setClientName((String) objects[12] + "/" + objects[13]);
+                    s.setClientName((String) objects[14] + "/" + objects[15]);
                 }
             }
 
@@ -270,9 +290,9 @@ public class OSalesAcDocService {
             report.setDateTo(DateUtil.dateToString(dateEnd));
         }
         report.setInvoices(invoices);
-        
+
         String currency = Application.currency();
-        
+
         report.setTotalInvAmount(currency + totalInvAmount.toString());
         report.setTotalCMAmount(currency + totalCMAmount.toString());
         report.setTotalDMAmount(currency + totalDMAmount.toString());
@@ -283,7 +303,7 @@ public class OSalesAcDocService {
         report.setTitle("Outstanding Invoice Report");
         return report;
     }
-        
+
     private OtherSalesAcDoc undefineChildren(OtherSalesAcDoc doc) {
 
         Set<OtherSalesAcDoc> relatedDocs = AcDocUtil.filterVoidRelatedDocumentsOther(doc.getRelatedDocuments());

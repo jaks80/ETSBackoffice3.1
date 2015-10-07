@@ -12,6 +12,8 @@ import java.util.Set;
  */
 public interface PnrDAO extends GenericDAO<Pnr, Long> {    
     
+    public int updatePnrSegmentAndLeadPax(String segment, String pax, Long id);
+    
     public Pnr getByIdWithChildren(Long id);
 
     public Set<String> findTicketingOIDs();

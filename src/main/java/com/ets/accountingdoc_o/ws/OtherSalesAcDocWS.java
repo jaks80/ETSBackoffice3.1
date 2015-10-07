@@ -34,6 +34,13 @@ public class OtherSalesAcDocWS {
     @Autowired
     OSalesAcDocService service;
 
+    @GET
+    @Path("/fixdb")
+    @PermitAll
+    public void updatePnrSegmentAndLeadPax(@QueryParam("dateStart") String dateStart,@QueryParam("dateEnd") String dateEnd) {
+       service.fixDB();
+    }
+
     @POST
     @Path("/new")
     @RolesAllowed("GS")
@@ -129,8 +136,7 @@ public class OtherSalesAcDocWS {
 
     @GET
     @Path("/acdoc_report")
-    //@RolesAllowed("SM")
-    @PermitAll
+    @RolesAllowed("SM")    
     public InvoiceReportOther outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,

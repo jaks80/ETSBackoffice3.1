@@ -19,7 +19,9 @@ public class OtherServiceService {
     public List<OtherService> findAll() {
 
         String hql = "from OtherService os "
-                + "left join fetch os.category as cat "
+                + "LEFT JOIN FETCH os.category as cat "
+                + "LEFT JOIN FETCH os.createdBy "
+                + "LEFT JOIN FETCH os.lastModifiedBy "
                 + "where os.active = 0 ";
         return dao.findMany(hql);
     }

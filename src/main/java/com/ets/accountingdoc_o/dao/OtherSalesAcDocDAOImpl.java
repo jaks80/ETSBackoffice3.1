@@ -122,19 +122,19 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
-        String sqlAgent = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference, "
+        String sqlAgent = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference, "
                 + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.name "
                 + "FROM other_sales_acdoc  d "
-                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "                
+                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "INNER JOIN agent a ON d.agentid_fk = a.id "
                 + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
                 + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
-        String sqlCustomer = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference,  "
+        String sqlCustomer = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference,  "
                 + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.surName as cs, a.foreName as cf "
@@ -146,12 +146,12 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
-        String sqlAll = "SELECT d.id, d.docIssueDate, d.remark, d.status, d1.reference, "
+        String sqlAll = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference, "
                 + "d.documentedAmount AS inv_amount, SUM(d1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(d1.type) AS types, GROUP_CONCAT(d1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.name, c.surName as cs, c.foreName as cf "
                 + "FROM other_sales_acdoc d "
-                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "               
+                + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "LEFT JOIN customer c ON d.customerid_fk = c.id "
                 + "LEFT JOIN agent a ON d.agentid_fk = a.id "
@@ -168,7 +168,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             query = getSession().createSQLQuery(sqlAll);
         }
 
-        if (clienttype!=null) {
+        if (clienttype != null) {
             query.setParameter("clientid", clientid);
         }
 
@@ -176,17 +176,17 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         query.setParameter("to", to);
 
         List results = query.list();
-  
+
         return results;
     }
+
     /**
-     * @deprecated 
-     * @param type
+     * @deprecated @param type
      * @param clienttype
      * @param clientid
      * @param from
      * @param to
-     * @return 
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -411,7 +411,6 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         return map;
     }
 
-    
     @Override
     @Transactional(readOnly = true)
     public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType) {
@@ -425,7 +424,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         }
 
         String sql = "SELECT a.id, a.name, a.addLine1,a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo, a.officeID,  SUM(t.documentedAmount) AS balance "
-                + "FROM other_sales_acdoc t "                
+                + "FROM other_sales_acdoc t "
                 + "INNER JOIN agent a ON t.agentid_fk = a.id "
                 + "WHERE t.status = 0 "
                 + "GROUP BY t.reference "
@@ -433,18 +432,18 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         Query query = getSession().createSQLQuery(sql);
         List results = query.list();
-        
+
         Iterator it = results.iterator();
-        Map<Long,Agent> agents = new LinkedHashMap<>();
-        
+        Map<Long, Agent> agents = new LinkedHashMap<>();
+
         while (it.hasNext()) {
             Object[] objects = (Object[]) it.next();
-            
+
             Agent a = new Agent();
-            
-            BigInteger bid = new BigInteger(objects[0].toString());            
+
+            BigInteger bid = new BigInteger(objects[0].toString());
             a.setId(bid.longValue());
-            
+
             a.setName((String) objects[1]);
             a.setAddLine1((String) objects[2]);
             a.setAddLine2((String) objects[3]);
@@ -455,18 +454,17 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             a.setMobile((String) objects[8]);
             a.setPostCode((String) objects[9]);
             a.setTelNo((String) objects[10]);
-            a.setOfficeID((String) objects[11]);            
-            
+            a.setOfficeID((String) objects[11]);
+
             agents.put(a.getId(), a);
-        }  
-        
+        }
+
         return new ArrayList<>(agents.values());
     }
-    
+
     /**
-     * @deprecated 
-     * @param acDocType
-     * @return 
+     * @deprecated @param acDocType
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -495,9 +493,8 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
     }
 
     /**
-     * @deprecated 
-     * @param acDocType
-     * @return 
+     * @deprecated @param acDocType
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -538,7 +535,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         String sql = "SELECT a.id, a.foreName, a.surName, a.contactPerson, a.addLine1,a.addLine2, a.city, "
                 + "a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo,  SUM(t.documentedAmount) AS balance "
-                + "FROM other_sales_acdoc t "                
+                + "FROM other_sales_acdoc t "
                 + "INNER JOIN customer a ON t.customerid_fk = a.id "
                 + "WHERE t.status = 0 "
                 + "GROUP BY t.reference "
@@ -546,18 +543,18 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         Query query = getSession().createSQLQuery(sql);
         List results = query.list();
-        
+
         Iterator it = results.iterator();
-        Map<Long,Customer> customers = new LinkedHashMap<>();
-        
+        Map<Long, Customer> customers = new LinkedHashMap<>();
+
         while (it.hasNext()) {
             Object[] objects = (Object[]) it.next();
-            
+
             Customer a = new Customer();
-            
-            BigInteger bid = new BigInteger(objects[0].toString());            
+
+            BigInteger bid = new BigInteger(objects[0].toString());
             a.setId(bid.longValue());
-            
+
             a.setForeName((String) objects[1]);
             a.setSurName((String) objects[2]);
             a.setContactPerson((String) objects[3]);
@@ -569,14 +566,14 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             a.setFax((String) objects[9]);
             a.setMobile((String) objects[10]);
             a.setPostCode((String) objects[11]);
-            a.setTelNo((String) objects[12]);            
-            
+            a.setTelNo((String) objects[12]);
+
             customers.put(a.getId(), a);
-        }  
-        
+        }
+
         return new ArrayList<>(customers.values());
     }
-    
+
     @Override
     public List<OtherSalesAcDoc> findInvoiceByRef(Long... references) {
         String hql = "select distinct a from OtherSalesAcDoc as a "
@@ -594,5 +591,33 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         query.setParameterList("references", references);
         List<OtherSalesAcDoc> invoices = query.list();
         return invoices;
+    }
+
+    @Override
+    public List<OtherSalesAcDoc> findAllDocuments() {
+        String hql = "select distinct a from OtherSalesAcDoc as a "
+                + "left join fetch a.payment as payment "
+                + "left join fetch a.accountingDocumentLines as adl "
+                + "left join fetch adl.otherService as os "
+                + "left join fetch os.category "
+                + "left join fetch a.relatedDocuments as r "
+                + "left join fetch a.agent as client "
+                + "left join fetch a.customer as client WHERE a.type = 0";
+
+        Query query = getSession().createQuery(hql);
+
+        List<OtherSalesAcDoc> invoice_history = query.list();
+        return invoice_history;
+
+    }
+
+    @Override
+    public int update(int itemQuantity, String category, long id) {
+        Query query = getSession().createQuery("UPDATE OtherSalesAcDoc SET itemQuantity = :itemQuantity, category = :category WHERE id = :id ");
+        query.setParameter("itemQuantity", itemQuantity);
+        query.setParameter("category", category);
+        query.setParameter("id", id);
+        int result = query.executeUpdate();
+        return result;
     }
 }

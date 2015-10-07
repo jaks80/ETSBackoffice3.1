@@ -106,15 +106,13 @@ public class AccountsService {
                     .append(" ")
                     .append(doc.getPnr().getAirLineCode())
                     .append(" ");
-                        
-                sb.append(doc.getPnr().getLeadPax());
-                
-                if (Enums.AcDocType.INVOICE.equals(doc.getType())) {
-                 sb.append(" ").append(doc.getPnr().getFirstSegment());
-                }
-                        
-            
-            
+
+            sb.append(doc.getPnr().getLeadPax());
+
+            if (Enums.AcDocType.INVOICE.equals(doc.getType())) {
+                sb.append(" ").append(doc.getPnr().getFlightSummery());
+            }
+
             if (doc.getRemark() != null) {
                 sb.append(doc.getRemark()).append(" ");
             }
@@ -208,17 +206,16 @@ public class AccountsService {
                     .append(" ")
                     .append(doc.getPnr().getAirLineCode())
                     .append(" ");
-            
+
             if (doc.getTickets() != null && !doc.getTickets().isEmpty()) {
                 Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(doc.getTickets());
                 sb.append(leadPax.getFullPaxName()).append("/").append(leadPax.getFullTicketNo());
-                
+
                 if (Enums.AcDocType.INVOICE.equals(doc.getType())) {
-                 sb.append(" ").append(doc.getPnr().getFirstSegment());
+                    sb.append(" ").append(doc.getPnr().getFlightSummery());
                 }
-            }            
-            
-            
+            }
+
             if (doc.getRemark() != null) {
                 sb.append(doc.getRemark()).append(" ");
             }

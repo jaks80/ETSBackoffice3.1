@@ -1,11 +1,10 @@
 package com.ets.pnr.service;
 
-import com.ets.pnr.dao.AirlineDAO;
 import com.ets.pnr.dao.RemarkDAO;
-import com.ets.pnr.domain.Airline;
 import com.ets.pnr.domain.Remark;
-import com.ets.pnr.model.collection.Airlines;
-import com.ets.pnr.logic.PnrUtil;
+import com.ets.pnr.model.RemarkSummary;
+import com.ets.util.DateUtil;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -16,23 +15,35 @@ import org.springframework.stereotype.Service;
  */
 @Service("remarkService")
 public class RemarkService {
-    
+
     @Resource(name = "remarkDAO")
     private RemarkDAO dao;
-    
-        public List<Remark> getByPnrId(Long pnrId) {
+
+    public List<RemarkSummary> getByPnrId(Long pnrId) {
         List<Remark> list = dao.getByPnrId(pnrId);
-        for (Remark a : list) {
-            PnrUtil.undefineChildrenInPnr(a.getPnr());            
+        List<RemarkSummary> summery_list = new ArrayList<>();
+
+        for (Remark r : list) {
+            RemarkSummary s = new RemarkSummary();
+            s.setId(r.getId());
+            s.setText(r.getText());
+            s.setCreatedBy(r.getCreatedBy().calculateFullName());
+            if(r.getDateTime()!=null){
+             s.setDateTime(DateUtil.dateToString(r.getDateTime(), "ddMMMyyyy HH:mm:ss"));
+            }else{
+             s.setDateTime("");
+            }
+
+            summery_list.add(s);
         }
-        return list;
+        return summery_list;
     }
-    
-    public void save(Remark remark){
-     dao.save(remark);
+
+    public void save(Remark remark) {
+        dao.save(remark);
     }
-    
-    public void saveBulk(List<Remark> remarks){
-     dao.saveBulk(remarks);
+
+    public void saveBulk(List<Remark> remarks) {
+        dao.saveBulk(remarks);
     }
 }

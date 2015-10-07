@@ -1,6 +1,7 @@
 package com.ets.accountingdoc_o.model;
 
 import com.ets.Application;
+import com.ets.accountingdoc.domain.AccountingDocumentLine;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
 import com.ets.accountingdoc.service.AcDocUtil;
 import com.ets.client.domain.Contactable;
@@ -93,7 +94,9 @@ public class InvoiceReportOther implements Serializable {
             invSummery.setId(invoice.getId());
             invSummery.setDocIssueDate(DateUtil.dateToString(invoice.getDocIssueDate()));
             invSummery.setRemark(invoice.getRemark());
-            invSummery.setNoOfItems(invoice.getAccountingDocumentLines().size());
+                        
+            invSummery.setNoOfItems(invoice.getItemQuantity());
+            invSummery.setCategory(invoice.getCategory());
             
             invSummery.setReference(invoice.getReference());
             invSummery.setStatus(invoice.getStatus().toString());

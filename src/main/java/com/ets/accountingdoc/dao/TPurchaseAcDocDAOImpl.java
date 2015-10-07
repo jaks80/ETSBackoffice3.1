@@ -170,7 +170,7 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
         String sqlAgent = "SELECT t.id, t.docIssueDate, t1.reference, "
-                + "pnr.gdsPnr, pnr.noOfPax, pnr.firstSegment, pnr.leadPax, pnr.airLineCode, "
+                + "pnr.gdsPnr, pnr.noOfPax, pnr.flightSummery, pnr.leadPax, pnr.airLineCode, "
                 + "t.documentedAmount AS inv_amount, SUM(t1.documentedAmount) AS balance, "
                 + "GROUP_CONCAT(t1.type) AS types, GROUP_CONCAT(t1.documentedAmount) AS amounts, "
                 + "created_by.surName, created_by.foreName, a.name "
@@ -583,12 +583,45 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
     @Override
     public List<Agent> findTicketingAgents() {
 
-        String hql = "select distinct agt from Agent as agt, Pnr as p "
-                + "where p.ticketingAgtOid = agt.officeID and agt.active = true order by agt.name ";
+//        String hql = "SELECT agt FROM Agent AS agt "
+//                + "INNER JOIN Pnr p ON p.ticketingAgtOid = agt.officeID "
+//                + "WHERE agt.active = true GROUP BY p.ticketingAgtOid ORDER BY agt.name ";
+        String sql = "SELECT a.id, a.name, a.addLine1, a.addLine2, a.city, a.country, a.email, a.fax, a.mobile, a.postCode, a.telNo, a.officeID " 
+                + "FROM agent a "
+                + "INNER JOIN pnr ON a.officeID LIKE CONCAT('%',pnr.ticketingAgtOid, '%') "
+                + "GROUP BY pnr.ticketingAgtOid";
 
-        Query query = getSession().createQuery(hql);
-        List<Agent> agents = query.list();
-        return agents;
+        Query query = getSession().createSQLQuery(sql);
+        List results = query.list();
+
+        Iterator it = results.iterator();
+        Map<Long, Agent> agents = new LinkedHashMap<>();
+
+        while (it.hasNext()) {
+            Object[] objects = (Object[]) it.next();
+
+            Agent a = new Agent();
+
+            BigInteger bid = new BigInteger(objects[0].toString());
+            a.setId(bid.longValue());
+
+            a.setName((String) objects[1]);
+            a.setAddLine1((String) objects[2]);
+            a.setAddLine2((String) objects[3]);
+            a.setCity((String) objects[4]);
+            a.setCountry((String) objects[5]);
+            a.setEmail((String) objects[6]);
+            a.setFax((String) objects[7]);
+            a.setMobile((String) objects[8]);
+            a.setPostCode((String) objects[9]);
+            a.setTelNo((String) objects[10]);
+            a.setOfficeID((String) objects[11]);
+
+            agents.put(a.getId(), a);
+        }
+
+        return new ArrayList<>(agents.values());
+
     }
 
 }

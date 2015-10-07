@@ -12,7 +12,10 @@ import com.ets.pnr.service.PnrService;
 import com.ets.accountingdoc.model.InvoiceReport;
 import com.ets.accountingdoc.model.TktingInvoiceSummery;
 import com.ets.client.domain.Agent;
+import com.ets.client.domain.Contactable;
 import com.ets.client.domain.Customer;
+import com.ets.client.service.AgentService;
+import com.ets.client.service.CustomerService;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.settings.domain.User;
 import com.ets.util.*;
@@ -42,6 +45,10 @@ public class TSalesAcDocService {
     private PnrService pnrService;
     @Autowired
     TPurchaseAcDocService purchase_service;
+    @Autowired
+    AgentService agentService;
+    @Autowired
+    CustomerService customerService;
 
     /**
      * It is really important accounting documents are loaded in order by id.
@@ -558,6 +565,7 @@ public class TSalesAcDocService {
 
         String currency = Application.currency();
 
+        report.setTotalInvoice(String.valueOf(results.size()));
         report.setTotalInvAmount(currency + totalInvAmount.toString());
         report.setTotalCMAmount(currency + totalCMAmount.toString());
         report.setTotalDMAmount(currency + totalDMAmount.toString());
@@ -566,6 +574,23 @@ public class TSalesAcDocService {
         report.setTotalRefund(currency + totalRefund.abs().toString());
 
         report.setTitle("Outstanding Invoice Report");
+
+        if (clientid != null) {
+            
+            Contactable cont = null;
+            if (clienttype.equals(Enums.ClientType.AGENT)) {
+                cont = agentService.getAgent(clientid);
+            } else {
+                cont = customerService.getCustomer(clientid);
+            }
+
+            report.setClientName(cont.calculateFullName());
+            report.setEmail(cont.getEmail());
+            report.setFax(cont.getFax());
+            report.setMobile(cont.getMobile());
+            report.setTelNo(cont.getMobile());
+            report.setAddressCRSeperated(cont.getAddressCRSeperated());
+        }
         return report;
     }
 

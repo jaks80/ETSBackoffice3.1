@@ -184,7 +184,7 @@ public class PaymentWS {
 
     @GET
     @Path("/cashbook")
-    @PermitAll
+    @RolesAllowed("SM")    
     public CashBookReport cashBook(
             @QueryParam("userid") Long userid,
             @QueryParam("clienttype") Enums.ClientType clienttype,

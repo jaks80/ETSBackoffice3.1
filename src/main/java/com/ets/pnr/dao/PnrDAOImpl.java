@@ -25,6 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
 
     @Override
+    public int updatePnrSegmentAndLeadPax(String segment, String pax, Long id) {
+        Query query = getSession().createQuery("update Pnr set flightSummery = :segment, leadPax = :pax where id = :id ");
+        query.setParameter("segment", segment);
+        query.setParameter("pax", pax);
+        query.setParameter("id", id);
+        int result = query.executeUpdate();
+        return result;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Pnr getByIdWithChildren(Long id) {
 
@@ -239,7 +249,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
     @Transactional(readOnly = true)
     public List<Pnr> getByInvRef(String invref) {
         String hql = "select t,p from Ticket t "
-                + "inner join t.pnr as p "                
+                + "inner join t.pnr as p "
                 + "where t.ticketingSalesAcDoc.reference =:invref "
                 + "group by p.id";
 

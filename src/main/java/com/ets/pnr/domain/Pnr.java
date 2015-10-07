@@ -28,7 +28,7 @@ public class Pnr extends PersistentObject implements Serializable {
     @XmlElement
     private Integer noOfPax;
     @XmlElement
-    private String firstSegment;
+    private String flightSummery;
     @XmlElement
     private String leadPax;    
     @XmlElement
@@ -229,20 +229,20 @@ public class Pnr extends PersistentObject implements Serializable {
     public void setPnrCancellationDate(Date pnrCancellationDate) {
         this.pnrCancellationDate = pnrCancellationDate;
     }
-
-    public String getFirstSegment() {
-        return firstSegment;
-    }
-
-    public void setFirstSegment(String firstSegment) {
-        this.firstSegment = firstSegment;
-    }
-
+    
     public String getLeadPax() {
         return leadPax;
     }
 
     public void setLeadPax(String leadPax) {
         this.leadPax = leadPax;
+    }
+
+    public String getFlightSummery() {
+        return flightSummery;
+    }
+
+    public void setFlightSummery(String flightSummery) {
+        this.flightSummery = flightSummery;
     }
 }

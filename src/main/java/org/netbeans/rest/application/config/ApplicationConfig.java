@@ -48,6 +48,7 @@ public class ApplicationConfig extends Application {
         resources.add(com.ets.security.SecurityInterceptor.class);
         resources.add(com.ets.settings.ws.AppSettingsWS.class);
         resources.add(com.ets.settings.ws.UserWS.class);
+        resources.add(com.ets.usertask.ws.UserTaskWS.class);
     }
     
 }

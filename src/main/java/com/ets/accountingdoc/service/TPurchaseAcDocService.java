@@ -286,6 +286,7 @@ public class TPurchaseAcDocService {
 
         String currency = Application.currency();
 
+        report.setTotalInvoice(String.valueOf(results.size()));
         report.setTotalInvAmount(currency + totalInvAmount.toString());
         report.setTotalCMAmount(currency + totalCMAmount.toString());
         report.setTotalDMAmount(currency + totalDMAmount.toString());
@@ -431,7 +432,6 @@ public class TPurchaseAcDocService {
             line.setValue(productivityLine.get(key).abs().toString());
             report.addLine(line);
         }
-
         return report;
     }
 

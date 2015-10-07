@@ -5,6 +5,7 @@ import com.ets.client.service.AgentService;
 import com.ets.report.model.Letterhead;
 import com.ets.settings.dao.AppSettingsDAO;
 import com.ets.settings.domain.AppSettings;
+import java.util.List;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,9 +35,15 @@ public class AppSettingsService {
         return getAgentService().saveorUpdate(agent);
     }
 
-    public AppSettings getSettings() {
-
-        AppSettings settings = dao.findByID(AppSettings.class, Long.parseLong("1"));
+    public AppSettings getSettings() {        
+        
+        //AppSettings settings = dao.findByID(AppSettings.class, Long.parseLong("1"));
+        String hql = "FROM AppSettings s "               
+                + "LEFT JOIN FETCH s.createdBy "
+                + "LEFT JOIN FETCH s.lastModifiedBy ";
+        
+        List<AppSettings> list = dao.findMany(hql);
+        AppSettings settings = list.get(0);
         if (settings == null) {
             return null;
         }

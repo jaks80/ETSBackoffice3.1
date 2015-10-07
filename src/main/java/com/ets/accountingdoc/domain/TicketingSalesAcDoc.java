@@ -149,7 +149,7 @@ public class TicketingSalesAcDoc extends AccountingDocument implements Serializa
         this.relatedDocuments = relatedDocuments;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_fk")
     public TicketingSalesAcDoc getParent() {
         return parent;

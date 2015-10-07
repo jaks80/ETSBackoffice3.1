@@ -64,6 +64,33 @@ public class Enums {
         }
     }
 
+    public enum TaskPriority {
+
+        HIGH(0), MEDIUM(1), LOW(2);
+        private int id;
+
+        TaskPriority(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public static String valueOf(int id) {
+            switch (id) {
+                case 0:
+                    return HIGH.toString();
+                case 1:
+                    return MEDIUM.toString();
+                case 2:
+                    return LOW.toString();
+                default:
+                    return null;
+            }
+        }
+    }
+
     public enum AIRType {
 
         BT(0), TTP(1), INV(2), TRFP(3);

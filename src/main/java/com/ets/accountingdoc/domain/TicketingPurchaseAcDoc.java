@@ -164,7 +164,7 @@ public class TicketingPurchaseAcDoc extends AccountingDocument implements Serial
         this.relatedDocuments = relatedDocuments;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_fk")
     public TicketingPurchaseAcDoc getParent() {
         return parent;

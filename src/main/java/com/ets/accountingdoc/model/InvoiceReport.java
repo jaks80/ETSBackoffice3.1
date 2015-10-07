@@ -109,7 +109,7 @@ public class InvoiceReport implements Serializable {
             invSummery.setReference(invoice.getReference());
             invSummery.setStatus(invoice.getStatus());
             invSummery.setType(invoice.getType());
-            invSummery.setOutBoundDetails(invoice.getPnr().getFirstSegment());
+            invSummery.setOutBoundDetails(invoice.getPnr().getFlightSummery());
 
             invSummery.setDocumentedAmount(invoice.getDocumentedAmount());
             invSummery.setOtherAmount(invoice.calculateTotalDebitMemo().add(invoice.calculateTotalCreditMemo()));
@@ -191,7 +191,7 @@ public class InvoiceReport implements Serializable {
             invSummery.setReference(invoice.getReference());
             invSummery.setStatus(invoice.getStatus());
             invSummery.setType(invoice.getType());
-            invSummery.setOutBoundDetails(invoice.getPnr().getFirstSegment());
+            invSummery.setOutBoundDetails(invoice.getPnr().getFlightSummery());
             invSummery.setDocumentedAmount(invoice.getDocumentedAmount());
             invSummery.setOtherAmount(invoice.calculateTotalDebitMemo().add(invoice.calculateTotalCreditMemo()));
             invSummery.setPayment(invoice.calculateTotalPayment().add(invoice.calculateTotalRefund()).abs());

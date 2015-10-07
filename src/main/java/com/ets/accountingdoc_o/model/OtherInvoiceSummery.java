@@ -43,7 +43,7 @@ public class OtherInvoiceSummery implements Serializable {
     @XmlElement
     private Integer noOfItems;
     @XmlElement
-    private Integer category;
+    private String category;
     @XmlElement
     private String remark;
     @XmlElement
@@ -128,11 +128,11 @@ public class OtherInvoiceSummery implements Serializable {
     }
 
 
-    public Integer getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(Integer category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 

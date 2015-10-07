@@ -61,7 +61,7 @@ public class Payment extends PersistentObject implements Serializable {
             OtherSalesAcDoc doc = oSalesAcDocuments.iterator().next();
             if (doc.getAgent() != null) {
                 clientName = doc.getAgent().getName();
-            } else {
+            } else if(doc.getCustomer() !=null){
                 clientName = doc.getCustomer().calculateFullName();
             }
         }

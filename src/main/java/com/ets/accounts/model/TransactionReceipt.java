@@ -101,7 +101,7 @@ public class TransactionReceipt {
                     }
                 }
 
-                sum.setOutBoundDetails(d.getPnr().getFirstSegment());
+                sum.setOutBoundDetails(d.getPnr().getFlightSummery());
 
                 lines.add(sum);
                 total = total.add(d.getDocumentedAmount().abs());

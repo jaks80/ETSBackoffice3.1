@@ -45,6 +45,10 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     
     public List<OtherSalesAcDoc> findAllDocuments(Enums.ClientType clienttype,Long clientid,Date dateStart,Date dateEnd);
         
+    public int update(int itemQuantity, String category, long id);
+    
+    public List<OtherSalesAcDoc> findAllDocuments();
+    
     public BigDecimal getAccountBallanceToDate(Enums.ClientType clienttype,Long clientid,Date dateEnd);
     
     public Map<User,BigDecimal> userProductivityReport(Date dateStart,Date dateEnd);

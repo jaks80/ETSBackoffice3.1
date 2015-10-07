@@ -58,21 +58,21 @@ public class PnrBusinessLogic {
      * @return 
      */
     public static Itinerary getFirstSegment(Set<Itinerary> segments) {
-        Itinerary firstSegment = null;
+        Itinerary flightSummery = null;
         Long index = null;
 
         for (Itinerary i : segments) {
             if (index == null) {
                 index = i.getId();
-                firstSegment = i;
+                flightSummery = i;
             } else {
                 if (i.getId() < index) {
                     index = i.getId();
-                    firstSegment = i;
+                    flightSummery = i;
                 }
             }
         }
-        return firstSegment;
+        return flightSummery;
     }    
 
 }
