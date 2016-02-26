@@ -66,6 +66,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "left join fetch acl.additionalCharge "
                 + "left join fetch a.tickets as t "
                 + "left join fetch a.createdBy as user "
+                + "left join fetch a.lastModifiedBy "
                 + "left join fetch a.relatedDocuments as a1 "
                 + "left join fetch a1.payment as p "
                 + "where a.pnr.id = :pnrId order by a.id asc";
@@ -143,6 +144,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         Query query = getSession().createQuery(hql);
         query.setParameter("id", id);
         TicketingSalesAcDoc doc = (TicketingSalesAcDoc) query.uniqueResult();
+        doc.setParent(null);
         Set<TicketingSalesAcDoc> related_docs = doc.getRelatedDocuments();
 
         for (TicketingSalesAcDoc rd : related_docs) {
@@ -162,6 +164,11 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             Long clientid, Date from, Date to) {
 
         String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
+        String dateCondition = "";
+
+        if (from != null && to != null) {
+            dateCondition = "AND t.docIssueDate BETWEEN :from AND :to ";
+        }
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
         String sqlAgent = "SELECT t.id, t.docIssueDate, t1.reference, "
@@ -174,8 +181,8 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
                 + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
                 + "INNER JOIN agent a ON pnr.agentid_fk = a.id "
-                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
-                + clientcondition
+                + "WHERE t.status=0 AND t.type=0 "
+                + dateCondition + clientcondition
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         String sqlCustomer = "SELECT t.id, t.docIssueDate, t1.reference, "
@@ -188,8 +195,8 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
                 + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
                 + "INNER JOIN customer a ON pnr.customerid_fk = a.id "
-                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
-                + clientcondition
+                + "WHERE t.status=0 AND t.type=0 "
+                + dateCondition + clientcondition
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         String sqlAll = "SELECT t.id, t.docIssueDate, t1.reference, "
@@ -203,7 +210,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
                 + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
                 + "LEFT JOIN customer c ON pnr.customerid_fk = c.id "
                 + "LEFT JOIN agent a ON pnr.agentid_fk = a.id "
-                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
+                + "WHERE t.status=0 AND t.type=0 " + dateCondition
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         Query query = null;
@@ -216,26 +223,27 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
             query = getSession().createSQLQuery(sqlAll);
         }
 
-        if (clienttype!=null) {
+        if (clienttype != null) {
             query.setParameter("clientid", clientid);
         }
 
-        query.setParameter("from", from);
-        query.setParameter("to", to);
+        if (from != null && to != null) {
+            query.setParameter("from", from);
+            query.setParameter("to", to);
+        }
 
         List results = query.list();
-  
+
         return results;
     }
 
     /**
-     * @deprecated 
-     * @param type
+     * @deprecated @param type
      * @param clienttype
      * @param clientid
      * @param from
      * @param to
-     * @return 
+     * @return
      */
     @Override
     @Transactional(readOnly = true)
@@ -348,7 +356,7 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
     @Override
     @Transactional(readOnly = true)
     public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype,
-            Long clientid, Date dateFrom, Date dateEnd) {
+            Long clientid, Date dateFrom, Date dateEnd, Integer limit) {
         String concatClient = "";
         String clientcondition = "and (:clientid is null or client.id = :clientid) ";
 
@@ -384,6 +392,9 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
         query.setParameter("dateFrom", dateFrom);
         query.setParameter("dateEnd", dateEnd);
 
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
         List<TicketingSalesAcDoc> dueInvoices = query.list();
         return dueInvoices;
     }

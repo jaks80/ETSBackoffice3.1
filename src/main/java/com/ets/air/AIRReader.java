@@ -5,10 +5,7 @@ import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Remark;
 import com.ets.pnr.domain.Ticket;
 import com.ets.air.service.AirService;
-import com.ets.settings.service.AppSettingsService;
-import com.ets.util.Enums;
-import com.ets.pnr.logic.PnrUtil;
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import javax.annotation.Resource;
@@ -47,8 +44,9 @@ public class AIRReader {
 
                     pnr.setTickets(new LinkedHashSet(tickets));
                     pnr.setSegments(new LinkedHashSet(segments));
-                    pnr.setRemarks(new LinkedHashSet(remarks));
-                    service.savePnr(pnr,air.getType());
+                    //pnr.setRemarks(new LinkedHashSet(remarks));
+                    Pnr persistedPnr = service.savePnr(pnr,air.getType());
+                    service.saveRemarks(remarks,persistedPnr);
                     break;
                 }
                 case "TRFP": {
@@ -75,7 +73,14 @@ public class AIRReader {
                 case "ET":
                 case "TTP/BTK":{
                     Pnr pnr = converter.airToPNR();
-                    List<Ticket> tickets = converter.airToTicket();
+                    List<Ticket> tickets = new ArrayList<>();
+                    
+                    if(!"BT".equals(air.getType())){
+                     tickets = converter.airToTicket();
+                    }else{
+                      tickets = converter.airToTicketForBTFile();
+                    }
+                    
                     List<Itinerary> segments = converter.airToItinerary();
                     List<Remark> remarks = converter.airToPNRRemarks();
                     for (AIR a : air.getMorePages()) {
@@ -84,7 +89,7 @@ public class AIRReader {
                     }
                     pnr.setTickets(new LinkedHashSet(tickets));
                     pnr.setSegments(new LinkedHashSet(segments));
-                    pnr.setRemarks(new LinkedHashSet(remarks));
+                    //pnr.setRemarks(new LinkedHashSet(remarks));
                     boolean issued = false;
 
                     for (Ticket t : tickets) {
@@ -112,7 +117,8 @@ public class AIRReader {
                     } else {
                         pnr.setTicketingAgtOid(null);
                         pnr.setTicketingAgentSine(null);
-                        service.savePnr(pnr,air.getType());
+                        Pnr persistedPnr = service.savePnr(pnr,air.getType());
+                        service.saveRemarks(remarks,persistedPnr);
                     }
                     break;
                 }

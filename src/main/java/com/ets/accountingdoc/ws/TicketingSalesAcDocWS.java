@@ -154,7 +154,7 @@ public class TicketingSalesAcDocWS {
 
     @GET
     @Path("/byref/{refferences}")
-    @RolesAllowed("GS")   
+    @RolesAllowed("GS")
     public InvoiceReport getReportByReferenceNumber(@PathParam("refferences") String refferences) {
         String[] ids_str = refferences.split(",");
         Long[] ids_long = new Long[ids_str.length];
@@ -168,7 +168,7 @@ public class TicketingSalesAcDocWS {
 
     @GET
     @Path("/acdoc_report")
-    @RolesAllowed("SM")   
+    @RolesAllowed("SM")
     public InvoiceReport outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,
@@ -187,7 +187,7 @@ public class TicketingSalesAcDocWS {
         InvoiceReport report = service.dueInvoiceReportSQL(doctype, clienttype, clientid, dateFrom, dateTo);
         return report;
     }
-    
+
     @GET
     @Path("/paymentdue_flight")
     @RolesAllowed("GS")
@@ -195,7 +195,8 @@ public class TicketingSalesAcDocWS {
             @QueryParam("clienttype") Enums.ClientType clienttype,
             @QueryParam("clientid") Long clientid,
             @QueryParam("dateStart") String dateStart,
-            @QueryParam("dateEnd") String dateEnd) {
+            @QueryParam("dateEnd") String dateEnd,
+            @QueryParam("limit") Integer limit) {
 
         Date dateFrom = null;
         Date dateTo = null;
@@ -205,7 +206,7 @@ public class TicketingSalesAcDocWS {
             dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
         }
 
-        InvoiceReport report = service.outstandingFlightReport(clienttype, clientid, dateFrom, dateTo);
+        InvoiceReport report = service.outstandingFlightReport(clienttype, clientid, dateFrom, dateTo, limit);
         return report;
     }
 

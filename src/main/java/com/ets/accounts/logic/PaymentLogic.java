@@ -1,9 +1,11 @@
 package com.ets.accounts.logic;
 
+import com.ets.accountingdoc.domain.AccountingDocument;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
 import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
 import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
 import com.ets.accounts.domain.Payment;
+import com.ets.exception.ExcessPaymentException;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import java.math.BigDecimal;
@@ -22,68 +24,67 @@ public class PaymentLogic {
      * then payment will inactive
      *
      * @param amount
+     * @param _invoice
      * @param invoice
      * @param remark
      * @param type
      * @param user
      * @return
+     * @throws com.ets.exception.ExcessPaymentException
      */
     public synchronized static Payment processSingleTSalesPayment(BigDecimal amount, TicketingSalesAcDoc invoice,
-            String remark, Enums.PaymentType type, User user) {
+            String remark, Enums.PaymentType type) throws ExcessPaymentException {
+        
         if (amount.compareTo(invoice.calculateDueAmount().abs()) > 0) {
-            return null;
-        } else {
-            Payment payment = new Payment();
-            payment.setRemark(remark);
-            payment.setPaymentType(type);
-            payment.setCreatedOn(new java.util.Date());
-            payment.setCreatedBy(user);
-
-            TicketingSalesAcDoc doc = new TicketingSalesAcDoc();
-            doc.setReference(invoice.getReference());
-            doc.setStatus(Enums.AcDocStatus.ACTIVE);
-            doc.setDocIssueDate(new java.util.Date());
-            doc.setPnr(invoice.getPnr());
-            doc.setCreatedOn(new java.util.Date());
-            doc.setCreatedBy(user);
-            doc.setParent(invoice);
-            doc.setPayment(payment);
-            if (invoice.calculateDueAmount().compareTo(new BigDecimal("0.00")) == 1) {
-                //Make payment   
-                doc.setType(Enums.AcDocType.PAYMENT);
-                doc.setDocumentedAmount(amount.negate());//Payment saves as negative
-            } else if (invoice.calculateDueAmount().compareTo(new BigDecimal("0.00")) == -1) {
-                //Make refund
-                doc.setType(Enums.AcDocType.REFUND);
-                doc.setDocumentedAmount(amount);
-            } else {
-                //Do nothing  
-                return null;
-            }
-            //invoice.addRelatedDocument(doc);
-            payment.addTSalesDocument(doc);
-
-            return payment;
+            throw new ExcessPaymentException("Warning! Excess payment");
         }
+        
+        Payment payment = new Payment();
+        payment.setRemark(remark);
+        payment.setPaymentType(type);
+        payment.setCreatedOn(new java.util.Date());       
+
+        TicketingSalesAcDoc doc = new TicketingSalesAcDoc();
+        doc.setReference(invoice.getReference());
+        doc.setStatus(Enums.AcDocStatus.ACTIVE);
+        doc.setDocIssueDate(new java.util.Date());
+        doc.setPnr(invoice.getPnr());
+        doc.setCreatedOn(new java.util.Date());       
+        doc.setParent(invoice);
+        doc.setPayment(payment);
+        if (invoice.calculateDueAmount().compareTo(new BigDecimal("0.00")) == 1) {
+            //Make payment   
+            doc.setType(Enums.AcDocType.PAYMENT);
+            doc.setDocumentedAmount(amount.negate());//Payment saves as negative
+        } else if (invoice.calculateDueAmount().compareTo(new BigDecimal("0.00")) == -1) {
+            //Make refund
+            doc.setType(Enums.AcDocType.REFUND);
+            doc.setDocumentedAmount(amount);
+        } else {
+            //Do nothing  
+            return null;
+        }
+        //invoice.addRelatedDocument(doc);
+        payment.addTSalesDocument(doc);
+
+        return payment;
     }
 
     public synchronized static Payment processSingleTPurchasePayment(BigDecimal amount, TicketingPurchaseAcDoc invoice, String remark,
-            Enums.PaymentType type, User user) {
+            Enums.PaymentType type) {
         if (amount.compareTo(invoice.calculateDueAmount().abs()) > 0) {
             return null;
         } else {
             Payment payment = new Payment();
             payment.setRemark(remark);
             payment.setPaymentType(type);
-            payment.setCreatedOn(new java.util.Date());
-            payment.setCreatedBy(user);
+            payment.setCreatedOn(new java.util.Date());           
 
             TicketingPurchaseAcDoc doc = new TicketingPurchaseAcDoc();
             doc.setReference(invoice.getReference());
             doc.setStatus(Enums.AcDocStatus.ACTIVE);
             doc.setDocIssueDate(new java.util.Date());
-            doc.setPnr(invoice.getPnr());
-            doc.setCreatedBy(user);
+            doc.setPnr(invoice.getPnr());            
             doc.setCreatedOn(new java.util.Date());
             doc.setParent(invoice);
             doc.setPayment(payment);
@@ -107,21 +108,19 @@ public class PaymentLogic {
     }
 
     public synchronized static Payment processSingleOSalesPayment(BigDecimal amount, OtherSalesAcDoc invoice,
-            String remark, Enums.PaymentType type, User user) {
+            String remark, Enums.PaymentType type) {
         if (amount.compareTo(invoice.calculateDueAmount().abs()) > 0) {
             return null;
         } else {
             Payment payment = new Payment();
             payment.setRemark(remark);
             payment.setPaymentType(type);
-            payment.setCreatedOn(new java.util.Date());
-            payment.setCreatedBy(user);
+            payment.setCreatedOn(new java.util.Date());           
 
             OtherSalesAcDoc doc = new OtherSalesAcDoc();
             doc.setReference(invoice.getReference());
             doc.setStatus(Enums.AcDocStatus.ACTIVE);
-            doc.setDocIssueDate(new java.util.Date());
-            doc.setCreatedBy(user);
+            doc.setDocIssueDate(new java.util.Date());            
             doc.setCreatedOn(new java.util.Date());
             doc.setAgent(invoice.getAgent());
             doc.setCustomer(invoice.getCustomer());
@@ -167,8 +166,8 @@ public class PaymentLogic {
      * @param paymentDate
      * @return
      */
-    public synchronized Payment processBSPPayment(List<TicketingPurchaseAcDoc> invoices, User user,Date paymentDate) {
-      
+    public synchronized Payment processBSPPayment(List<TicketingPurchaseAcDoc> invoices, User user, Date paymentDate) {
+
         Payment payment = new Payment();
         payment.setRemark("BSP payment");
         payment.setPaymentType(Enums.PaymentType.BANKT_TANSFER);

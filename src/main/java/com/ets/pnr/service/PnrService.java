@@ -1,20 +1,30 @@
 package com.ets.pnr.service;
 
+import com.ets.accountingdoc.domain.TicketingPurchaseAcDoc;
+import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
+import com.ets.accountingdoc.service.AcDocUtil;
+import com.ets.accountingdoc.service.TPurchaseAcDocService;
+import com.ets.accountingdoc.service.TSalesAcDocService;
 import com.ets.client.domain.MainAgent;
+import com.ets.exception.PastSegmentException;
+import com.ets.exception.ValidAccountingDocumentExistException;
+import com.ets.exception.ValidTicketExist;
 import com.ets.pnr.model.collection.Pnrs;
 import com.ets.pnr.dao.PnrDAO;
-import com.ets.pnr.domain.Itinerary;
 import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.logic.PnrBusinessLogic;
+import com.ets.pnr.logic.PnrDeleteLogic;
 import com.ets.pnr.model.ATOLCertificate;
 import com.ets.settings.service.AppSettingsService;
 import com.ets.util.DateUtil;
 import com.ets.pnr.logic.PnrUtil;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,6 +36,14 @@ public class PnrService {
 
     @Resource(name = "pnrDAO")
     private PnrDAO dao;
+    @Resource(name = "pnrDeleteLogic")
+    private PnrDeleteLogic pnrDeleteLogic;
+    @Autowired
+    private RemarkService remarkService;
+    @Resource(name = "tSalesAcDocService")
+    private TSalesAcDocService tSalesAcDocService;
+    @Resource(name = "tPurchaseAcDocService")
+    private TPurchaseAcDocService tPurchaseAcDocService;
 
     public void updatePnrSegmentAndLeadPax(String issueDateFrom, String issueDateTo) {
 
@@ -33,14 +51,14 @@ public class PnrService {
         Date dateTo = DateUtil.stringToDate(issueDateTo, "ddMMMyyyy");
 
         List<Pnr> pnrList = dao.find(dateFrom, dateTo, null, null);
-        System.out.println("Found:"+pnrList.size());
+        System.out.println("Found:" + pnrList.size());
         int i = 0;
         for (Pnr pnr : pnrList) {
             String segment = PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments());
             String leadPax = PnrBusinessLogic.calculateLeadPaxName(pnr.getTickets());
             int status = dao.updatePnrSegmentAndLeadPax(segment, leadPax, pnr.getId());
             i++;
-            System.out.println("Updated:"+i);
+            System.out.println("Updated:" + i);
         }
     }
 
@@ -54,16 +72,43 @@ public class PnrService {
         return dao.findTicketingOIDs();
     }
 
-    public String delete(Long id, Date today) {
-        Pnr pnr = getByIdWithChildren(id);
-        Itinerary flightSummery = PnrBusinessLogic.getFirstSegment(pnr.getSegments());
+    /**
+     * Thread safety needed
+     *
+     * @param id
+     * @param todayFromUsersMachine
+     * @return
+     * @throws com.ets.exception.ValidAccountingDocumentExistException
+     * @throws com.ets.exception.PastSegmentException
+     */
+    //@Transactional
+    public synchronized String delete(Long id, Date todayFromUsersMachine) throws ValidAccountingDocumentExistException, PastSegmentException, ValidTicketExist {
+        Pnr pnr = dao.getByIdWithChildren(id);
 
-        if (flightSummery.getDeptDate().after(today)) {
+        if (pnrDeleteLogic.deletable(pnr, todayFromUsersMachine)) {
+            //Delete remakrs
+            remarkService.deleteRemarks(pnr.getId());
+
+            // Children Accounting documents prevent deleting Pnr. These needs to be deleted before deleting Pnr.   
+            List<TicketingSalesAcDoc> accountingDocs = tSalesAcDocService.getByPnrId(pnr.getId());
+            //Set<TicketingSalesAcDoc> valid_accountingDocs = AcDocUtil.filterVoidDocuments(new HashSet(accountingDocs));
+
+            Set<TicketingSalesAcDoc> void_accountingDocs = new HashSet(AcDocUtil.getVoidSalesDocuments(new ArrayList(accountingDocs)));
+
+            if (!void_accountingDocs.isEmpty()) {
+                tSalesAcDocService.deleteBulk(void_accountingDocs);
+            }
+
+            Set<TicketingPurchaseAcDoc> p_docs = new HashSet(tPurchaseAcDocService.getByPnrId(pnr.getId()));
+
+            if (!p_docs.isEmpty()) {
+                tPurchaseAcDocService.deleteBulk(p_docs);
+            }
+
             dao.delete(pnr);
             return "Deleted";
-        } else {
-            return "Past segment PNR can not be deleted";
         }
+        return "";
     }
 
     public List<Pnr> getByGDSPnr(String gdsPnr) {
@@ -162,7 +207,7 @@ public class PnrService {
         List<Pnr> pnrList = dao.searchUninvoicedPnr();
         for (Pnr p : pnrList) {
             p.setSegments(null);
-            p.setRemarks(null);
+            //p.setRemarks(null);
             PnrUtil.undefinePnrInTickets(p, p.getTickets());
         }
         return pnrList;

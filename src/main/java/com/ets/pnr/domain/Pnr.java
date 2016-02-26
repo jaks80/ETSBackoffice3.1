@@ -54,8 +54,8 @@ public class Pnr extends PersistentObject implements Serializable {
     private Set<Ticket> tickets = new LinkedHashSet<>();
     @XmlElement
     private Set<Itinerary> segments = new LinkedHashSet<>();
-    @XmlElement
-    private Set<Remark> remarks = new LinkedHashSet<>();
+//    @XmlElement
+//    private Set<Remark> remarks = new LinkedHashSet<>();
     @XmlElement
     private Agent agent;
     @XmlElement
@@ -130,15 +130,15 @@ public class Pnr extends PersistentObject implements Serializable {
         this.segments = segments;
     }
 
-    @OneToMany(mappedBy = "pnr", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy(value = "id")
-    public Set<Remark> getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(Set<Remark> remarks) {
-        this.remarks = remarks;
-    }
+//    @OneToMany(mappedBy = "pnr", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    @OrderBy(value = "id")
+//    public Set<Remark> getRemarks() {
+//        return remarks;
+//    }
+//
+//    public void setRemarks(Set<Remark> remarks) {
+//        this.remarks = remarks;
+//    }
 
     @Column(length = 9)
     public String getBookingAgtOid() {

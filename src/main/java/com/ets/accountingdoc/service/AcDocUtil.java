@@ -14,17 +14,28 @@ import java.util.Set;
  */
 public class AcDocUtil {
 
-    public static List<TicketingSalesAcDoc> getVoidSalesInvoices(List<TicketingSalesAcDoc> invoices) {
+    public static List<TicketingSalesAcDoc> getVoidSalesDocuments(List<TicketingSalesAcDoc> documents) {
         List<TicketingSalesAcDoc> filteredDocs = new ArrayList<>();
 
-        for (TicketingSalesAcDoc d : invoices) {
+        for (TicketingSalesAcDoc d : documents) {
             if (d.getStatus().equals(Enums.AcDocStatus.VOID)) {
                 filteredDocs.add(d);
             }
         }
         return filteredDocs;
     }
-        
+
+    public static Set<TicketingSalesAcDoc> filterVoidDocuments(Set<TicketingSalesAcDoc> documents) {
+        Set<TicketingSalesAcDoc> filteredDocs = new LinkedHashSet<>();
+
+        for (TicketingSalesAcDoc d : documents) {
+            if (!d.getStatus().equals(Enums.AcDocStatus.VOID)) {
+                filteredDocs.add(d);
+            }
+        }
+        return filteredDocs;
+    }
+
     public static Set<TicketingSalesAcDoc> filterVoidRelatedDocuments(Set<TicketingSalesAcDoc> relatedDocuments) {
         Set<TicketingSalesAcDoc> filteredDocs = new LinkedHashSet<>();
 
@@ -46,7 +57,7 @@ public class AcDocUtil {
         }
         return filteredDocs;
     }
-        
+
     public static Set<TicketingPurchaseAcDoc> filterPVoidRelatedDocuments(Set<TicketingPurchaseAcDoc> relatedDocuments) {
         Set<TicketingPurchaseAcDoc> filteredDocs = new LinkedHashSet<>();
 
@@ -74,14 +85,14 @@ public class AcDocUtil {
         }
     }
 
-     public static void undefineOAcDocumentInPayment(OtherSalesAcDoc a) {
+    public static void undefineOAcDocumentInPayment(OtherSalesAcDoc a) {
         if (a.getPayment() != null) {
             a.getPayment().settSalesAcDocuments(null);
             a.getPayment().settPurchaseAcDocuments(null);
             a.getPayment().setoSalesAcDocuments(null);
         }
     }
-        
+
     public static Long generateAcDocRef(Long lastInvRef) {
         if (lastInvRef != null) {
             return ++lastInvRef;
@@ -90,31 +101,31 @@ public class AcDocUtil {
         }
     }
 
-    public static void initTSAcDocInTickets(TicketingSalesAcDoc doc, Set<Ticket> tickets) {        
+    public static void initTSAcDocInTickets(TicketingSalesAcDoc doc, Set<Ticket> tickets) {
         for (Ticket t : tickets) {
             t.setTicketingSalesAcDoc(doc);
-        }       
+        }
     }
 
-    public static void initTPAcDocInTickets(TicketingPurchaseAcDoc doc, Set<Ticket> tickets) {       
+    public static void initTPAcDocInTickets(TicketingPurchaseAcDoc doc, Set<Ticket> tickets) {
         for (Ticket t : tickets) {
             t.setTicketingPurchaseAcDoc(doc);
         }
     }
 
-    public static void initAcDocInLine(OtherSalesAcDoc doc, Set<AccountingDocumentLine> lines) {        
+    public static void initAcDocInLine(OtherSalesAcDoc doc, Set<AccountingDocumentLine> lines) {
         for (AccountingDocumentLine line : lines) {
             line.setOtherSalesAcDoc((OtherSalesAcDoc) doc);
         }
     }
 
-    public static void UndefineAcDocInLine(OtherSalesAcDoc doc, Set<AccountingDocumentLine> lines) {        
+    public static void UndefineAcDocInLine(OtherSalesAcDoc doc, Set<AccountingDocumentLine> lines) {
         for (AccountingDocumentLine line : lines) {
             line.setOtherSalesAcDoc(null);
-        }        
+        }
     }
 
-    public static void initAddChgLine(AccountingDocument doc, Set<AdditionalChargeLine> lines) {        
+    public static void initAddChgLine(AccountingDocument doc, Set<AdditionalChargeLine> lines) {
         for (AdditionalChargeLine line : lines) {
             if (doc instanceof TicketingSalesAcDoc) {
                 line.setTicketingSalesAcDoc((TicketingSalesAcDoc) doc);
@@ -123,10 +134,10 @@ public class AcDocUtil {
             } else if (doc instanceof OtherSalesAcDoc) {
                 line.setOtherSalesAcDoc((OtherSalesAcDoc) doc);
             }
-        }       
+        }
     }
 
-    public static void initAcDocInLine(AccountingDocument doc, Set<AccountingDocumentLine> lines) {              
+    public static void initAcDocInLine(AccountingDocument doc, Set<AccountingDocumentLine> lines) {
         for (AccountingDocumentLine line : lines) {
             if (doc instanceof TicketingSalesAcDoc) {
                 //line.setTicketingSalesAcDoc((TicketingSalesAcDoc) doc);
@@ -135,8 +146,8 @@ public class AcDocUtil {
             }
         }
     }
-        
-    public static void undefineAcDocInLine(AccountingDocument doc, Set<AccountingDocumentLine> lines) {        
+
+    public static void undefineAcDocInLine(AccountingDocument doc, Set<AccountingDocumentLine> lines) {
         for (AccountingDocumentLine line : lines) {
             if (doc instanceof TicketingSalesAcDoc) {
                 //line.setTicketingSalesAcDoc(null);
@@ -145,7 +156,7 @@ public class AcDocUtil {
             }
         }
     }
-        
+
     public static Set<AdditionalChargeLine> undefineAddChgLine(AccountingDocument doc, Set<AdditionalChargeLine> lines) {
         Set<AdditionalChargeLine> tempLines = new LinkedHashSet<>();
         for (AdditionalChargeLine line : lines) {

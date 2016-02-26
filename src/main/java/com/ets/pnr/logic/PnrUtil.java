@@ -4,14 +4,12 @@ import com.ets.pnr.domain.Itinerary;
 import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.domain.Remark;
 import com.ets.pnr.domain.Ticket;
-import com.ets.util.DateUtil;
 import com.ets.util.Enums;
 import com.ets.util.Enums.TicketStatus;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +22,7 @@ public class PnrUtil {
 
     public static void initPnrChildren(Pnr pnr) {
 
-        PnrUtil.initPnrInRemark(pnr, pnr.getRemarks());
+        //PnrUtil.initPnrInRemark(pnr, pnr.getRemarks());
         PnrUtil.initPnrInTickets(pnr, pnr.getTickets());
         PnrUtil.initPnrInSegments(pnr, pnr.getSegments());
 
@@ -33,15 +31,16 @@ public class PnrUtil {
     public static void undefineChildrenInPnr(Pnr pnr) {
         pnr.setTickets(null);
         pnr.setSegments(null);
-        pnr.setRemarks(null);
+        //pnr.setRemarks(null);
         pnr.setCreatedBy(null);
         pnr.setLastModifiedBy(null);
     }
 
     public static void undefinePnrChildren(Pnr pnr) {
-        if (pnr.getRemarks() != null && !pnr.getRemarks().isEmpty()) {
-            PnrUtil.undefinePnrInRemark(pnr, pnr.getRemarks());
-        }
+//        if (pnr.getRemarks() != null && !pnr.getRemarks().isEmpty()) {
+//            PnrUtil.undefinePnrInRemark(pnr, pnr.getRemarks());
+//        }
+        
         PnrUtil.undefinePnrInTickets(pnr, pnr.getTickets());
         PnrUtil.undefinePnrInSegments(pnr, pnr.getSegments());
     }
@@ -113,7 +112,7 @@ public class PnrUtil {
         oldPnr.setPnrCancellationDate(newPnr.getPnrCancellationDate());
         oldPnr.setVendorPNR(newPnr.getVendorPNR());
         oldPnr.setAirLineCode(newPnr.getAirLineCode());
-        oldPnr.setRemarks(initPnrInRemark(oldPnr, newPnr.getRemarks()));
+        //oldPnr.setRemarks(initPnrInRemark(oldPnr, newPnr.getRemarks()));
         return oldPnr;
     }
 
@@ -258,6 +257,17 @@ public class PnrUtil {
             }
         }
         return tickets;
+    }
+    
+    public static Set<Ticket> filterValidTicket(Set<Ticket> tickets) {
+        Set<Ticket> filteredTickets = new LinkedHashSet<>();
+
+        for (Ticket t : tickets) {
+            if (!Enums.TicketStatus.VOID.equals(t.getTktStatus()) && !Enums.TicketStatus.BOOK.equals(t.getTktStatus())) {
+                filteredTickets.add(t);
+            }
+        }
+        return filteredTickets;
     }
     
     public static Set<Ticket> getUnInvoicedTicket(Pnr pnr) {

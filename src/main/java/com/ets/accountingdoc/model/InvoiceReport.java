@@ -183,8 +183,13 @@ public class InvoiceReport implements Serializable {
             invSummery.setGdsPnr(invoice.getPnr().getGdsPnr());
             invSummery.setNoOfPax(invoice.getPnr().getNoOfPax());
             
-            String leadPax = invoice.getPnr().getLeadPax();
-            invSummery.setLeadPsgr(PnrUtil.calculatePartialName(leadPax));
+            //String leadPax = invoice.getPnr().getLeadPax();
+            //invSummery.setLeadPsgr(PnrUtil.calculatePartialName(leadPax));
+            Set<Ticket> tickets = invoice.getTickets();
+            if (tickets != null && !tickets.isEmpty()) {
+                Ticket leadPax = PnrBusinessLogic.calculateLeadPaxTicket(tickets);
+                invSummery.setLeadPsgr(leadPax.getFullPaxName() + "/" + leadPax.getFullTicketNo());
+            }
             
             invSummery.setAirLine(invoice.getPnr().getAirLineCode());
             invSummery.setPnr_id(invoice.getPnr().getId());

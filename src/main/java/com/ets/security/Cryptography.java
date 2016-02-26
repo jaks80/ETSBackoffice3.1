@@ -114,11 +114,11 @@ public class Cryptography {
     }
 
     public static void main(String[] args) throws Exception {
-        String message = "maks215";
+        String message = "1two34";
         System.out.println("Message: " + String.valueOf(message));
 
         String encs = encryptString(message);
         System.out.println("Encrypted: " + encs);
-        System.out.println("Decrypted: " + decryptString(encs));
+        System.out.println("Decrypted: " + decryptString("mzNat4xEfK4CUrEHrrk0Wg==partition[-54, -119, -121, 101, -75, 122, 38, 56, -54, 9, -81, -54, -101, -9, 51, 2]"));
     }
 }

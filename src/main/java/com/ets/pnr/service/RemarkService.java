@@ -27,11 +27,13 @@ public class RemarkService {
             RemarkSummary s = new RemarkSummary();
             s.setId(r.getId());
             s.setText(r.getText());
-            s.setCreatedBy(r.getCreatedBy().calculateFullName());
-            if(r.getDateTime()!=null){
-             s.setDateTime(DateUtil.dateToString(r.getDateTime(), "ddMMMyyyy HH:mm:ss"));
-            }else{
-             s.setDateTime("");
+            if (r.getCreatedBy() != null) {
+                s.setCreatedBy(r.getCreatedBy().calculateFullName());
+            }
+            if (r.getDateTime() != null) {
+                s.setDateTime(DateUtil.dateToString(r.getDateTime(), "ddMMMyyyy HH:mm:ss"));
+            } else {
+                s.setDateTime("");
             }
 
             summery_list.add(s);
@@ -45,5 +47,9 @@ public class RemarkService {
 
     public void saveBulk(List<Remark> remarks) {
         dao.saveBulk(remarks);
+    }
+
+    public void deleteRemarks(Long pnrId) {
+        dao.deleteRemarks(pnrId);
     }
 }

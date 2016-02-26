@@ -1,5 +1,8 @@
 package com.ets.pnr.ws;
 
+import com.ets.exception.PastSegmentException;
+import com.ets.exception.ValidAccountingDocumentExistException;
+import com.ets.exception.ValidTicketExist;
 import com.ets.pnr.model.collection.Pnrs;
 import com.ets.pnr.domain.Pnr;
 import com.ets.pnr.model.ATOLCertificate;
@@ -7,6 +10,8 @@ import com.ets.pnr.service.PnrService;
 import com.ets.util.DateUtil;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -55,13 +60,20 @@ public class PnrWS {
     @RolesAllowed("SM")
     public Response delete(@PathParam("id") long id, @QueryParam("date") String date) {
 
-        Date _date = DateUtil.stringToDate(date, "ddMMMyyyy");
-        String message = service.delete(id, _date);
-        if ("Deleted".equals(message)) {
-            return Response.status(200).entity(message).build();
-        } else {
-            return Response.status(500).entity(message).build();
+        Response response = null;
+        try {
+            Date _date = DateUtil.stringToDate(date, "ddMMMyyyy");
+            String message = service.delete(id, _date);
+            if ("Deleted".equals(message)) {
+                return Response.status(200).entity(message).build();
+            } else {
+                response= Response.status(500).entity(message).build();
+            }
+        } catch (ValidAccountingDocumentExistException | PastSegmentException | ValidTicketExist ex) {
+           response= Response.status(500).entity(ex.getMessage()).build();
         }
+        
+        return response;
     }
 
     @GET

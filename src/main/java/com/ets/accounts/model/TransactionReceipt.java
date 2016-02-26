@@ -91,6 +91,7 @@ public class TransactionReceipt {
                 sum.setNoOfPax(d.getPnr().getNoOfPax());
                 sum.setDocumentedAmount(d.getDocumentedAmount().abs());
                 sum.setStatus(d.getStatus());
+                sum.setType(d.getType());
 
                 if (d.getParent() != null) {
                     sum.setParentId(d.getParent().getId());
@@ -140,6 +141,7 @@ public class TransactionReceipt {
                 sum.setNoOfPax(d.getPnr().getNoOfPax());
                 sum.setDocumentedAmount(d.getDocumentedAmount().abs());
                 sum.setStatus(d.getStatus());
+                sum.setType(d.getType());
                 lines.add(sum);
                 total = total.add(d.getDocumentedAmount());
 
@@ -184,6 +186,7 @@ public class TransactionReceipt {
                 sum.setRemark(d.getRemark());
                 sum.setDocumentedAmount(d.getDocumentedAmount().abs());
                 sum.setStatus(d.getStatus().toString());
+                sum.setType(d.getType());
                 olines.add(sum);
                 total = total.add(d.getDocumentedAmount());
 

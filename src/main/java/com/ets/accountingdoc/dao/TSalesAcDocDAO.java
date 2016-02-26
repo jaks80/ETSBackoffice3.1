@@ -70,7 +70,7 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
     
     public List<TicketingSalesAcDoc> findOutstandingDocuments(Enums.AcDocType type, Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd);
 
-    public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype, Long clientid, Date dateFrom, Date dateEnd);
+    public List<TicketingSalesAcDoc> outstandingFlightReport(Enums.ClientType clienttype, Long clientid, Date dateFrom, Date dateEnd, Integer limit);
 
     public List<TicketingSalesAcDoc> findInvoiceHistory(Enums.ClientType clienttype, Long clientid, Date dateStart, Date dateEnd);
 

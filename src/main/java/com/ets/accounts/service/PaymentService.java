@@ -8,13 +8,19 @@ import com.ets.accountingdoc.service.TPurchaseAcDocService;
 import com.ets.accountingdoc.service.TSalesAcDocService;
 import com.ets.accountingdoc_o.service.OSalesAcDocService;
 import com.ets.accounts.logic.PaymentLogic;
+import com.ets.exception.ExcessPaymentException;
+import com.ets.exception.InvalidAmountException;
+import com.ets.exception.InvoiceNotFoundException;
 import com.ets.security.LoginManager;
 import com.ets.settings.domain.User;
 import com.ets.util.Enums;
 import com.ets.pnr.logic.PnrUtil;
+import com.ets.util.Enums.SaleType;
+import static com.ets.util.Enums.SaleType.TKTSALES;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.annotation.Resource;
+import javax.ws.rs.QueryParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +49,37 @@ public class PaymentService {
 
         save(bspPayment);
         return bspPayment;
+    }
+
+    public Payment createSignlePayment(final BigDecimal amount,
+            final String remark, final Enums.PaymentType type,
+            final Long invoiceId, final SaleType saleType, final User user) throws InvoiceNotFoundException, ExcessPaymentException, InvalidAmountException {
+
+        Payment payment = null;
+        if (amount == null || amount.signum() == 0) {
+            throw new InvalidAmountException("Amount not valid !!!");
+        }
+
+        if (type == null || saleType == null || user == null) {
+            throw new InvalidAmountException("Invlaid payment type !!!");
+        }
+
+        switch (saleType) {
+            case TKTSALES:
+                TicketingSalesAcDoc tsinvoice = tSalesAcDocService.getWithChildrenById(invoiceId);
+                payment = PaymentLogic.processSingleTSalesPayment(amount, tsinvoice, remark, type);
+                break;
+            case TKTPURCHASE:
+                TicketingPurchaseAcDoc tpinvoice = tPurchaseAcDocService.getWithChildrenById(invoiceId);
+                payment = PaymentLogic.processSingleTPurchasePayment(amount, tpinvoice, remark, type);
+                break;
+            case OTHERSALES:
+                OtherSalesAcDoc oinvoice = oSalesAcDocService.getWithChildrenById(invoiceId);
+                payment = PaymentLogic.processSingleOSalesPayment(amount, oinvoice, remark, type);
+                break;
+        }
+
+        return save(payment);
     }
 
     public Payment save(Payment payment) {
@@ -87,7 +124,7 @@ public class PaymentService {
         return payment;
     }
 
-    public String delete(Long paymentid) {        
+    public String delete(Long paymentid) {
         Payment payment = dao.findById(paymentid);
         dao.delete(payment);
         return "Deleted";
@@ -194,8 +231,9 @@ public class PaymentService {
      * contains "invoice id to refund" and amount to refund.
      *
      * @param creditTransfer
+     * @param user
      */
-    public void createCreditTransfer(CreditTransfer creditTransfer) {
+    public void createCreditTransfer(CreditTransfer creditTransfer, User user) throws ExcessPaymentException {
 
         LinkedHashMap<Long, BigDecimal> refundMap = creditTransfer.getRefundMap();
         Long[] ids = refundMap.keySet().toArray(new Long[refundMap.size()]);
@@ -210,11 +248,13 @@ public class PaymentService {
                 String remark = "Credit Transfer from: " + rfd_doc.getReference() + " to " + invoiceToPay.getReference();
 
                 Payment refund = PaymentLogic.processSingleTSalesPayment(amount, rfd_doc, remark,
-                        Enums.PaymentType.CREDIT_TRANSFER, creditTransfer.getUser());
+                        Enums.PaymentType.CREDIT_TRANSFER);
 
+                refund.setCreatedBy(user);
                 newTransactions.add(refund);
                 Payment payment = PaymentLogic.processSingleTSalesPayment(amount, invoiceToPay, remark,
-                        Enums.PaymentType.CREDIT_TRANSFER, creditTransfer.getUser());
+                        Enums.PaymentType.CREDIT_TRANSFER);
+                payment.setCreatedBy(user);
                 newTransactions.add(payment);
             }
         } else if (creditTransfer.getSaleType().equals(Enums.SaleType.OTHERSALES)) {
@@ -226,11 +266,14 @@ public class PaymentService {
                 String remark = "Credit Transfer from: " + rfd_doc.getReference() + " to " + invoiceToPay.getReference();
 
                 Payment refund = PaymentLogic.processSingleOSalesPayment(amount, rfd_doc, remark,
-                        Enums.PaymentType.CREDIT_TRANSFER, creditTransfer.getUser());
+                        Enums.PaymentType.CREDIT_TRANSFER);
+
+                refund.setCreatedBy(user);
 
                 newTransactions.add(refund);
                 Payment payment = PaymentLogic.processSingleOSalesPayment(amount, invoiceToPay, remark,
-                        Enums.PaymentType.CREDIT_TRANSFER, creditTransfer.getUser());
+                        Enums.PaymentType.CREDIT_TRANSFER);
+                payment.setCreatedBy(user);
                 newTransactions.add(payment);
             }
         }
@@ -273,7 +316,7 @@ public class PaymentService {
                     doc.setTickets(null);
                     doc.setRelatedDocuments(null);
                     doc.getPnr().setTickets(null);
-                    doc.getPnr().setRemarks(null);
+                    //doc.getPnr().setRemarks(null);
 
                     if (doc.getParent() != null) {
                         doc.getParent().setAdditionalChargeLines(null);
@@ -292,7 +335,7 @@ public class PaymentService {
                     doc.setTickets(null);
                     doc.setRelatedDocuments(null);
                     doc.getPnr().setTickets(null);
-                    doc.getPnr().setRemarks(null);
+                    //doc.getPnr().setRemarks(null);
 
                     if (doc.getParent() != null) {
                         doc.getParent().setAdditionalChargeLines(null);

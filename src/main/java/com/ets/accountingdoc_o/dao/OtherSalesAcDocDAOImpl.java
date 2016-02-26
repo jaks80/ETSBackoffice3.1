@@ -64,7 +64,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         Query query = getSession().createQuery(hql);
         query.setParameter("id", id);
         OtherSalesAcDoc doc = (OtherSalesAcDoc) query.uniqueResult();
-
+        doc.setParent(null);
         Set<OtherSalesAcDoc> related_docs = doc.getRelatedDocuments();
 
         for (OtherSalesAcDoc rd : related_docs) {
@@ -120,6 +120,11 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             Long clientid, Date from, Date to) {
 
         String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
+        String dateCondition = "";
+        
+        if (from != null && to != null) {
+            dateCondition = "AND d.docIssueDate BETWEEN :from AND :to ";
+        }
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
         String sqlAgent = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference, "
@@ -130,8 +135,8 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "INNER JOIN agent a ON d.agentid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
-                + clientcondition
+                + "WHERE d.status=0 AND d.type=0 "  
+                + dateCondition + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
         String sqlCustomer = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference,  "
@@ -142,8 +147,8 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "INNER JOIN customer a ON d.customerid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
-                + clientcondition
+                + "WHERE d.status=0 AND d.type=0 "  
+                + dateCondition + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
         String sqlAll = "SELECT d.id, d.docIssueDate, d.remark, d.status,d.itemQuantity,d.category, d1.reference, "
@@ -155,7 +160,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "LEFT JOIN customer c ON d.customerid_fk = c.id "
                 + "LEFT JOIN agent a ON d.agentid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 AND d.docIssueDate BETWEEN :from AND :to "
+                + "WHERE d.status=0 AND d.type=0 " + dateCondition 
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
         Query query = null;
@@ -172,8 +177,10 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
             query.setParameter("clientid", clientid);
         }
 
-        query.setParameter("from", from);
-        query.setParameter("to", to);
+        if (from != null && to != null) {
+            query.setParameter("from", from);
+            query.setParameter("to", to);
+        }
 
         List results = query.list();
 

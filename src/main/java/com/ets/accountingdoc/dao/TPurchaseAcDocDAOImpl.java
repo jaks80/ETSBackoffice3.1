@@ -56,7 +56,7 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
         Query query = getSession().createQuery(hql);
         query.setParameter("id", id);
         TicketingPurchaseAcDoc doc = (TicketingPurchaseAcDoc) query.uniqueResult();
-
+        doc.setParent(null);
         Set<TicketingPurchaseAcDoc> related_docs = doc.getRelatedDocuments();
 
         for (TicketingPurchaseAcDoc rd : related_docs) {
@@ -167,6 +167,11 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
     public List findOutstandingInvoiceSQL(Enums.AcDocType type, Long clientid, Date from, Date to) {
 
         String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
+        String dateCondition = "";
+        
+        if (from != null && to != null) {
+            dateCondition = "AND t.docIssueDate BETWEEN :from AND :to ";
+        }
         char operator = type.equals(Enums.AcDocType.REFUND) ? '<' : '>';
 
         String sqlAgent = "SELECT t.id, t.docIssueDate, t1.reference, "
@@ -179,8 +184,8 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
                 + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
                 + "LEFT JOIN bo_user created_by ON t.created_by = created_by.id "
                 + "INNER JOIN agent a ON pnr.tkagentid_fk = a.id "
-                + "WHERE t.status=0 AND t.type=0 AND t.docIssueDate BETWEEN :from AND :to "
-                + clientcondition
+                + "WHERE t.status=0 AND t.type=0 "
+                + dateCondition + clientcondition
                 + "GROUP BY t1.reference HAVING balance " + operator + "0 ORDER BY t.docIssueDate,t.id";
 
         Query query = null;
@@ -188,8 +193,10 @@ public class TPurchaseAcDocDAOImpl extends GenericDAOImpl<TicketingPurchaseAcDoc
         query = getSession().createSQLQuery(sqlAgent);
         query.setParameter("clientid", clientid);
 
-        query.setParameter("from", from);
-        query.setParameter("to", to);
+        if (from != null && to != null) {
+            query.setParameter("from", from);
+            query.setParameter("to", to);
+        }
 
         List results = query.list();
 

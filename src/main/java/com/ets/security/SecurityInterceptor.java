@@ -54,12 +54,12 @@ public class SecurityInterceptor implements javax.ws.rs.container.ContainerReque
                 requestContext.abortWith(ACCESS_DENIED);
                 return;
             }
-           
-            final String[] tokenizer =authorization.get(0).split("crsplitter");            
-            
+
+            final String[] tokenizer = authorization.get(0).split("crsplitter");
+
             final String username = tokenizer[0];
             final String enc_password = tokenizer[1];
-                        
+
             final String password = Cryptography.decryptString(enc_password);
 
             //Verify user access
@@ -77,6 +77,15 @@ public class SecurityInterceptor implements javax.ws.rs.container.ContainerReque
                 }
             }
         }
+    }
+
+    public static User getUser(String tokenizer) {
+        final String[] vals = tokenizer.split("crsplitter");
+
+        final String loginId = vals[0];
+        final String enc_password = vals[1];
+        final String password = Cryptography.decryptString(enc_password);
+        return LoginManager.getUser(loginId, password);
     }
 
     private boolean isUserAllowed(final String loginId, final String password, final Set<String> rolesSet) {

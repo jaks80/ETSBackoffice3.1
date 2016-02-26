@@ -12,6 +12,8 @@ import com.ets.pnr.service.AirlineService;
 import com.ets.pnr.service.TicketService;
 import com.ets.util.Enums;
 import com.ets.pnr.logic.PnrUtil;
+import com.ets.pnr.model.collection.Remarks;
+import com.ets.pnr.service.RemarkService;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -27,27 +29,29 @@ import org.springframework.stereotype.Service;
  */
 @Service("airService")
 public class AirService {
-
+    
     @Resource(name = "airDAO")
     private AirDAO dao;
     @Autowired
     AgentService agentService;
-
+    
     @Resource(name = "itineraryDAO")
     private ItineraryDAO itineraryDAO;
-
+    
     @Resource(name = "ticketDAO")
     private TicketDAO ticketDAO;
     @Autowired
     TicketService ticketService;
-
+    @Autowired
+    private RemarkService remarkService;
+    
     @Autowired
     AirlineService airlineService;
     @Autowired
     TSalesAcDocService tSalesAcDocService;
-
+    
     public AirService() {
-
+        
     }
 
     /**
@@ -59,19 +63,19 @@ public class AirService {
      * @return
      */
     public Pnr savePnr(Pnr newPnr, String fileType) {
-
+        
         Pnr persistedPnr = findPnr(newPnr.getGdsPnr(), newPnr.getPnrCreationDate());
-
+        
         if (persistedPnr == null) {
             persistedPnr = newPnr;
         } else {
             //BT should not override issued stuff.
             if (fileType.equals("INV") || fileType.equals("TTP") || fileType.equals("TTP/BTK")) {
-
+                
                 if (checkVoidInvoiceNeeded(newPnr, persistedPnr)) {// Do this before updating tickets
                     persistedPnr = findPnr(newPnr.getGdsPnr(), newPnr.getPnrCreationDate());
                 }
-
+                
                 persistedPnr = PnrUtil.updatePnr(persistedPnr, newPnr);
                 Set<Ticket> dbTickets = persistedPnr.getTickets();
                 persistedPnr.setTickets(PnrUtil.updateTickets(dbTickets, newPnr.getTickets()));
@@ -81,25 +85,25 @@ public class AirService {
                 return null;//Imrpove BT logic here
             }
         }
-
+        
         Airline airline = airlineService.find(persistedPnr.getAirLineCode());
         if (airline != null) {
             setBspCommission(persistedPnr.getTickets(), airline);
         }
-
+        
         PnrUtil.initPnrChildren(persistedPnr);
-
+        
         Agent ticketing_agent = agentService.findByOfficeID(persistedPnr.getTicketingAgtOid());
         persistedPnr.setTicketing_agent(ticketing_agent);
         save(persistedPnr);
-
+        
         PnrUtil.undefinePnrChildren(persistedPnr); //Undefine cyclic dependencies to avoid cyclic xml exception
 
         return persistedPnr;
     }
-
+    
     public List<Ticket> refundTicket(List<Ticket> tickets) {
-
+        
         Pnr persistedPnr = dao.findPnr(tickets.get(0).getTicketNo(), tickets.get(0).getSurName());
         List<Ticket> tobePersisted = new ArrayList<>();
 
@@ -113,55 +117,67 @@ public class AirService {
                     exist = true;
                 }
             }
-
+            
             if (!exist) {
                 tobePersisted.add(tn);
             }
         }
-
+        
         if (!tobePersisted.isEmpty()) {
-
+            
             Airline airline = airlineService.find(persistedPnr.getAirLineCode());
             if (airline != null) {
                 setBspCommission(new LinkedHashSet<>(tobePersisted), airline);
             }
-
+            
             PnrUtil.initPnrInTickets(persistedPnr, tobePersisted);
             ticketDAO.saveBulk(tobePersisted);
             PnrUtil.undefinePnrInTickets(persistedPnr, tobePersisted);
         }
         return tickets;
     }
-
+    
+    public List<Remark> saveRemarks(List<Remark> remarks, Pnr pnr) {
+        
+        for (Remark r : remarks) {
+            r.setPnr(pnr);
+            r.setCreatedBy(pnr.getCreatedBy());
+            r.setCreatedOn(pnr.getCreatedOn());            
+        }
+        
+        remarkService.saveBulk(remarks);
+        return remarks;        
+    }
+    
     public List<Ticket> voidTicket(List<Ticket> tickets, Pnr pnr) {
         for (Ticket t : tickets) {
             ticketService._void(pnr.getGdsPnr(), t.getNumericAirLineCode(), t.getTicketNo(), t.getSurName());
         }
         return tickets;
     }
-
+    
     private void setBspCommission(Set<Ticket> tickets, Airline airline) {
         for (Ticket t : tickets) {
             t.setCommission(airline.calculateBspCom(t));
         }
     }
-
+    
     public Pnr findPnr(String gdsPnr, Date pnrCreationdate) {
         return dao.findPnr(gdsPnr, pnrCreationdate);
     }
-
+    
     public void save(Pnr pnr) {
         pnr.setFlightSummery(PnrBusinessLogic.getFirstSegmentSummery(pnr.getSegments()));
         
         Ticket leadPaxTicket = PnrBusinessLogic.calculateLeadPaxTicket(pnr.getTickets());
-        pnr.setLeadPax(leadPaxTicket.getSurName()+"/"+leadPaxTicket.getForeName()+"/"+leadPaxTicket.getFullTicketNo());
+        pnr.setLeadPax(leadPaxTicket.getSurName() + "/" + leadPaxTicket.getForeName() + "/" + leadPaxTicket.getFullTicketNo());
         
         dao.save(pnr);
     }
 
     //VOID sales document if booking to issue
     public boolean checkVoidInvoiceNeeded(Pnr newPnr, Pnr persistedPnr) {
-
+        
         for (Ticket newTicket : newPnr.getTickets()) {
             for (Ticket oldTicket : persistedPnr.getTickets()) {
                 if ((newTicket.getSurName().equals(oldTicket.getSurName())
@@ -177,12 +193,12 @@ public class AirService {
         }
         return false;
     }
-
+    
     public void voidSalesInvoice(Ticket ticket, Pnr persistedPnr) {
         TicketingSalesAcDoc invoice = tSalesAcDocService.findInvoiceByPaxName(ticket.getSurName(),
                 ticket.getTktStatus(), persistedPnr.getId());
-        if(invoice!=null){
-         tSalesAcDocService.voidInvoiceByAIRReader(invoice);
+        if (invoice != null) {
+            tSalesAcDocService.voidInvoiceByAIRReader(invoice);
         }
     }
 }

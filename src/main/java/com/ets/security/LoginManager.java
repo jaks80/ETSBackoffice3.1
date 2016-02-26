@@ -65,6 +65,16 @@ public class LoginManager {
             return null;
         }
     }
+    
+    public synchronized static User getUser(String loginId, String password) {
+        Login login = getLoginList().get(loginId);
+
+        if (login != null) {
+            return login.getUser();
+        } else {
+            return null;
+        }
+    }
 
     public synchronized static boolean loginExpired(String loginId, String password) {
         Login login = getLoginList().get(loginId);

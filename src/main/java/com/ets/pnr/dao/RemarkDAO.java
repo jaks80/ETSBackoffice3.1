@@ -10,5 +10,7 @@ import java.util.List;
  */
 public interface RemarkDAO extends GenericDAO<Remark, Long>{
     
+    public int deleteRemarks(Long pnrId);
+    
     public List<Remark> getByPnrId(Long pnr_id);
 }

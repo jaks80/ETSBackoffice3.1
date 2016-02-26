@@ -14,12 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("remarkDAO")
 @Transactional
 public class RemarkDAOImpl extends GenericDAOImpl<Remark, Long> implements RemarkDAO{
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<Remark> getByPnrId(Long pnrId) {
         String hql = "SELECT DISTINCT r FROM Remark AS r "
-                + "LEFT JOIN FETCH r.pnr as p "               
+                + "LEFT JOIN FETCH r.pnr as p "
                 + "LEFT JOIN FETCH r.createdBy "
                 + "WHERE p.id = :pnrId ORDER BY r.id ASC";
 
@@ -28,5 +28,13 @@ public class RemarkDAOImpl extends GenericDAOImpl<Remark, Long> implements Remar
         List<Remark> result = query.list();
         return result;
     }
-    
+
+    @Override
+    public int deleteRemarks(Long pnrId) {
+
+        String sql = "DELETE FROM remark WHERE pnrid_fk=:pnrId";
+        Query query = getSession().createSQLQuery(sql);
+        query.setParameter("pnrId", pnrId);
+        return query.executeUpdate();
+    }
 }

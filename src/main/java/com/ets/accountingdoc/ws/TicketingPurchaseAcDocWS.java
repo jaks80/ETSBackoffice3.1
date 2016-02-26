@@ -183,24 +183,23 @@ public class TicketingPurchaseAcDocWS {
         return report;
     }
 
-    @GET
-    @Path("/acdoc_reportsql")
-    //@RolesAllowed("SM")
-    @PermitAll
-    public InvoiceReport outstandingDocumentReportSQL(
-            @QueryParam("doctype") Enums.AcDocType doctype,
-            @QueryParam("agentid") Long agentid,
-            @QueryParam("dateStart") String dateStart,
-            @QueryParam("dateEnd") String dateEnd) {
-
-        Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
-        Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
-
-        InvoiceReport report = service.dueInvoiceReportSQL(doctype,
-                agentid, dateFrom, dateTo);
-
-        return report;
-    }
+//    @GET
+//    @Path("/acdoc_reportsql")
+//    @RolesAllowed("SM")    
+//    public InvoiceReport outstandingDocumentReportSQL(
+//            @QueryParam("doctype") Enums.AcDocType doctype,
+//            @QueryParam("agentid") Long agentid,
+//            @QueryParam("dateStart") String dateStart,
+//            @QueryParam("dateEnd") String dateEnd) {
+//
+//        Date dateFrom = DateUtil.stringToDate(dateStart, "ddMMMyyyy");
+//        Date dateTo = DateUtil.stringToDate(dateEnd, "ddMMMyyyy");
+//
+//        InvoiceReport report = service.dueInvoiceReportSQL(doctype,
+//                agentid, dateFrom, dateTo);
+//
+//        return report;
+//    }
     
     @GET
     @Path("/acdoc_history")

@@ -8,6 +8,8 @@ import com.ets.pnr.domain.Ticket;
 import com.ets.accountingdoc.model.InvoiceReport;
 import com.ets.accountingdoc.model.TktingInvoiceSummery;
 import com.ets.client.domain.Agent;
+import com.ets.client.domain.Contactable;
+import com.ets.client.service.AgentService;
 import com.ets.pnr.model.GDSSaleReport;
 import com.ets.pnr.service.TicketService;
 import com.ets.productivity.model.ProductivityReport;
@@ -37,7 +39,13 @@ public class TPurchaseAcDocService {
     private TPurchaseAcDocDAO dao;
     @Autowired
     TicketService ticketService;
+    @Autowired
+    AgentService agentService;
 
+    public void deleteBulk(Set<TicketingPurchaseAcDoc> docs){
+     dao.deleteBulk(docs);
+    }
+    
     public synchronized TicketingPurchaseAcDoc createNewDocument(TicketingPurchaseAcDoc doc) {
 
         if (doc.getTickets() != null && !doc.getTickets().isEmpty()) {
@@ -100,13 +108,13 @@ public class TPurchaseAcDocService {
         TicketingPurchaseAcDoc doc = dao.getWithChildrenById(id);
         //validateDocumentedAmount(doc);
 
-        if (doc.getParent() != null) {
-            doc.getParent().setAdditionalChargeLines(null);
-            doc.getParent().setPayment(null);
-            doc.getParent().setPnr(null);
-            doc.getParent().setTickets(null);
-            doc.getParent().setRelatedDocuments(null);
-        }
+//        if (doc.getParent() != null) {
+//            doc.getParent().setAdditionalChargeLines(null);
+//            doc.getParent().setPayment(null);
+//            doc.getParent().setPnr(null);
+//            doc.getParent().setTickets(null);
+//            doc.getParent().setRelatedDocuments(null);
+//        }
         return undefineChildren(doc);
     }
 
@@ -142,7 +150,7 @@ public class TPurchaseAcDocService {
 
         PnrUtil.undefinePnrInSegments(doc.getPnr(), doc.getPnr().getSegments());
         doc.getPnr().setTickets(null);
-        doc.getPnr().setRemarks(null);
+        //doc.getPnr().setRemarks(null);
 
         return doc;
     }
@@ -295,6 +303,19 @@ public class TPurchaseAcDocService {
         report.setTotalRefund(currency + totalRefund.abs().toString());
 
         report.setTitle("Outstanding Invoice Report");
+
+        if (clientid != null) {
+
+            Contactable cont = agentService.getAgent(clientid);
+
+            report.setClientName(cont.calculateFullName());
+            report.setEmail(cont.getEmail());
+            report.setFax(cont.getFax());
+            report.setMobile(cont.getMobile());
+            report.setTelNo(cont.getMobile());
+            report.setAddressCRSeperated(cont.getAddressCRSeperated());
+        }
+
         return report;
     }
 
@@ -328,7 +349,11 @@ public class TPurchaseAcDocService {
             AcDocUtil.undefineTPAcDoc(inv, inv.getTickets());
             inv.setAdditionalChargeLines(null);
             inv.getPnr().setTickets(null);
-            inv.getPnr().setRemarks(null);
+            inv.setAdditionalChargeLines(null);
+            inv.getPnr().setTickets(null);
+            inv.setAdditionalChargeLines(null);
+            inv.getPnr().setTickets(null);
+            //inv.getPnr().setRemarks(null);
             PnrUtil.undefinePnrInSegments(inv.getPnr(), inv.getPnr().getSegments());
             //inv.getPnr().setSegments(null);
         }
@@ -360,7 +385,7 @@ public class TPurchaseAcDocService {
             inv.setTickets(null);
             //inv.setRelatedDocuments(null);
             inv.getPnr().setTickets(null);
-            inv.getPnr().setRemarks(null);
+            //inv.getPnr().setRemarks(null);
             inv.getPnr().setSegments(null);
 
             for (TicketingPurchaseAcDoc related : inv.getRelatedDocuments()) {

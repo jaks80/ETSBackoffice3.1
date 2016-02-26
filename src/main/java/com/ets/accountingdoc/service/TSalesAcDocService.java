@@ -50,6 +50,9 @@ public class TSalesAcDocService {
     @Autowired
     CustomerService customerService;
 
+    public void deleteBulk(Set<TicketingSalesAcDoc> docs){
+     dao.deleteBulk(docs);
+    }
     /**
      * It is really important accounting documents are loaded in order by id.
      *
@@ -85,7 +88,7 @@ public class TSalesAcDocService {
             if (invoices.isEmpty()) {
                 draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedIssuedTicket);
             } else {
-                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesInvoices(invoices);
+                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesDocuments(invoices);
                 if (void_invoices.isEmpty()) {
                     draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedIssuedTicket);
                 } else {
@@ -98,7 +101,8 @@ public class TSalesAcDocService {
             if (invoices.isEmpty()) {
                 draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedReIssuedTicket);
             } else {
-                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesInvoices(invoices);
+                //Use void invoices so that reference will be same
+                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesDocuments(invoices);
                 if (void_invoices.isEmpty()) {
                     draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedReIssuedTicket);
                 } else {
@@ -130,7 +134,7 @@ public class TSalesAcDocService {
             if (invoices.isEmpty()) {
                 draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedVoidTicket);
             } else {
-                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesInvoices(invoices);
+                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesDocuments(invoices);
                 if (void_invoices.isEmpty()) {
                     draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedVoidTicket);
                 } else {
@@ -143,7 +147,7 @@ public class TSalesAcDocService {
             if (invoices.isEmpty()) {
                 draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedBookedTicket);
             } else {
-                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesInvoices(invoices);
+                List<TicketingSalesAcDoc> void_invoices = AcDocUtil.getVoidSalesDocuments(invoices);
 
                 if (void_invoices.isEmpty()) {
                     draftDocument = logic.newTicketingDraftInvoice(new TicketingSalesAcDoc(), uninvoicedBookedTicket);
@@ -162,7 +166,7 @@ public class TSalesAcDocService {
      * create every single accounting document with/without tickets
      *
      * @param doc
-     * @return
+     * @return 
      */
     public synchronized TicketingSalesAcDoc newDocument(TicketingSalesAcDoc doc) {
 
@@ -287,14 +291,14 @@ public class TSalesAcDocService {
     //    }
     public TicketingSalesAcDoc getWithChildrenById(long id) {
         TicketingSalesAcDoc doc = dao.getWithChildrenById(id);
-        //validateDocumentedAmount(doc);
-        if (doc.getParent() != null) {
-            doc.getParent().setAdditionalChargeLines(null);
-            doc.getParent().setPayment(null);
-            doc.getParent().setPnr(null);
-            doc.getParent().setTickets(null);
-            doc.getParent().setRelatedDocuments(null);
-        }
+        
+//        if (doc.getParent() != null) {
+//            doc.getParent().setAdditionalChargeLines(null);
+//            doc.getParent().setPayment(null);
+//            doc.getParent().setPnr(null);
+//            doc.getParent().setTickets(null);
+//            doc.getParent().setRelatedDocuments(null);
+//        }
 
         return undefineChildren(doc);
     }
@@ -325,7 +329,7 @@ public class TSalesAcDocService {
 
         PnrUtil.undefinePnrInSegments(doc.getPnr(), doc.getPnr().getSegments());
         doc.getPnr().setTickets(null);
-        doc.getPnr().setRemarks(null);
+        //doc.getPnr().setRemarks(null);
 
         return doc;
     }
@@ -453,7 +457,7 @@ public class TSalesAcDocService {
             AcDocUtil.undefineTSAcDoc(inv, inv.getTickets());
             //inv.setRelatedDocuments(null);
             inv.getPnr().setTickets(null);
-            inv.getPnr().setRemarks(null);
+            //inv.getPnr().setRemarks(null);
             PnrUtil.undefinePnrInSegments(inv.getPnr(), inv.getPnr().getSegments());
             //inv.getPnr().setSegments(null);
         }
@@ -604,11 +608,11 @@ public class TSalesAcDocService {
     }
 
     public InvoiceReport outstandingFlightReport(Enums.ClientType clienttype,
-            Long clientid, Date dateFrom, Date dateEnd) {
+            Long clientid, Date dateFrom, Date dateEnd, Integer limit) {
 
         Date dateStart = new java.util.Date();
 
-        List<TicketingSalesAcDoc> dueInvoices = dao.outstandingFlightReport(clienttype, clientid, dateFrom, dateEnd);
+        List<TicketingSalesAcDoc> dueInvoices = dao.outstandingFlightReport(clienttype, clientid, dateFrom, dateEnd, limit);
         InvoiceReport report = InvoiceReport.serializeToSalesSummery(clientid, dueInvoices, dateStart, dateEnd);
         report.setTitle("Unpaid Flight Report");
         return report;

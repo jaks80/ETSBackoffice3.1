@@ -41,7 +41,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
         String hql = "select distinct p from Pnr as p "
                 + "left join fetch p.tickets as t "
                 + "left join fetch p.segments "
-                + "left join fetch p.remarks "
+                //+ "left join fetch p.remarks "
                 + "left join fetch p.agent "
                 + "left join fetch p.customer "
                 + "left join fetch p.createdBy "
@@ -49,6 +49,8 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
                 + "left join fetch p.ticketing_agent "
                 + "left join fetch t.ticketingSalesAcDoc "
                 + "left join fetch t.ticketingPurchaseAcDoc "
+                + "left join fetch t.createdBy "
+                + "left join fetch t.lastModifiedBy "
                 + "where p.id = :id";
 
         Query query = getSession().createQuery(hql);
@@ -99,7 +101,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
         String hql = "select distinct p from Pnr p "
                 + "left join fetch p.tickets as t "
                 + "left join fetch p.segments as s "
-                + "left join fetch p.remarks as r "
+                //+ "left join fetch p.remarks as r "
                 + "where "
                 + bookingAgtOidQuery + ticketingAgtOidQuery
                 + "(p.airCreationDate >= :from) and (p.airCreationDate <= :to)";
@@ -171,7 +173,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
             Pnr pnr = (Pnr) objects[1];
             pnr.setTickets(null);//Avoid lazy loading here. Create a new hashset and set
             pnr.setSegments(null);
-            pnr.setRemarks(null);
+            //pnr.setRemarks(null);
             Set<Ticket> tickets = new LinkedHashSet<>();
             tickets.add(leadPaxTicket);
             pnr.setTickets(tickets);
@@ -200,7 +202,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
             Ticket leadPaxTicket = (Ticket) objects[0];
             Pnr pnr = (Pnr) objects[1];
             pnr.setSegments(null);
-            pnr.setRemarks(null);
+            //pnr.setRemarks(null);
             pnr.setAgent(null);
             pnr.setCustomer(null);
             pnr.setTicketing_agent(null);
@@ -232,7 +234,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
             Ticket leadPaxTicket = (Ticket) objects[0];
             Pnr pnr = (Pnr) objects[1];
             pnr.setSegments(null);
-            pnr.setRemarks(null);
+            //pnr.setRemarks(null);
             pnr.setAgent(null);
             pnr.setCustomer(null);
             pnr.setTicketing_agent(null);
@@ -264,7 +266,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
             Ticket leadPaxTicket = (Ticket) objects[0];
             Pnr pnr = (Pnr) objects[1];
             pnr.setSegments(null);
-            pnr.setRemarks(null);
+            //pnr.setRemarks(null);
             pnr.setAgent(null);
             pnr.setCustomer(null);
             pnr.setTicketing_agent(null);
@@ -303,7 +305,7 @@ public class PnrDAOImpl extends GenericDAOImpl<Pnr, Long> implements PnrDAO {
             Ticket leadPaxTicket = (Ticket) objects[0];
             Pnr pnr = (Pnr) objects[1];
             pnr.setSegments(null);
-            pnr.setRemarks(null);
+            //pnr.setRemarks(null);
             pnr.setAgent(null);
             pnr.setCustomer(null);
             pnr.setTicketing_agent(null);

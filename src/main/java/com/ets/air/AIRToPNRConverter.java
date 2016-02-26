@@ -103,9 +103,11 @@ public class AIRToPNRConverter {
         for (String s : air.getLines()) {
             if (s.startsWith("RM") && !s.contains("ROBOT")) {
                 String[] vals = AIRLineParser.parseRMLine(s);
-                Remark rm = new Remark();
-                rm.setText(vals[0]);
-                remarks.add(rm);
+                if (vals != null && vals.length > 0) {
+                    Remark rm = new Remark();
+                    rm.setText(vals[0]);
+                    remarks.add(rm);
+                }
             }
         }
         return remarks;
@@ -280,6 +282,163 @@ public class AIRToPNRConverter {
 
                 ticket.setTktStatus(TicketStatus.ISSUE);
             } else if (s.startsWith("FE")) {
+                String restrictions = s.substring(2);
+                ticket.setRestrictions(restrictions);
+            } else if (s.startsWith("FO") && s.length() > 4) {
+                String[] data = AIRLineParser.parseFOLine(s);
+
+                if (s.charAt(5) == '-') {
+                    ticket.setOrginalTicketNo(s.substring(6, 16));
+                } else {
+                    ticket.setOrginalTicketNo(s.substring(5, 15));
+                }
+                if (air.getType().equals("TTP")) {
+                    ticket.setTktStatus(TicketStatus.REISSUE);
+                }
+
+            }
+        }
+
+        return tickets;
+    }
+
+    public List<Ticket> airToTicketForBTFile() {
+        List<Ticket> tickets = new ArrayList<>();
+
+        String localCurrencyCode = null;
+        String bfCurrencyCode = null;
+        BigDecimal baseFare = new BigDecimal("0.00");
+        BigDecimal totalFare = new BigDecimal("0.00");
+        BigDecimal tax = new BigDecimal("0.00");
+        Ticket ticket = null;        
+        
+        for (String s : air.getLines()) {
+
+            if (s.startsWith("I-")) {
+                String[] data = AIRLineParser.parseILine(s);
+                String[] name = data[1].substring(2).trim().split("/");
+
+                ticket = new Ticket();
+                ticket.setTktStatus(TicketStatus.BOOK);//Setting default status; This will be overwridden after
+                ticket.setDocIssuedate(DateUtil.yyMMddToDate(air.getCreationDate()));
+                ticket = getNameFormStringArray(data, ticket);                
+                tickets.add(ticket);
+            } else if (s.startsWith("T-") && s.length() > 4) {
+                String[] data = AIRLineParser.parseTLine(s);
+                if (data[0] != null && data[0].length() > 3) {
+                    ticket.setNumericAirLineCode(data[0].substring(1, 4).trim());
+                }
+
+                if (data.length == 3) {
+                    ticket.setTicketNo(data[1] + "-" + data[2]);
+                } else {
+                    ticket.setTicketNo(data[1]);
+                }
+
+                ticket.setTktStatus(TicketStatus.ISSUE);
+            }else if (s.startsWith("K-") && s.length() > 4) {
+                String[] data = AIRLineParser.parseKLine(s);
+
+                localCurrencyCode = data[12].replaceAll("[^A-Z]", "");
+                bfCurrencyCode = data[0].replaceAll("[^A-Z]", "").substring(1);
+
+                totalFare = new BigDecimal(data[12].replaceAll("[a-zA-Z]", "").trim());
+
+                if (totalFare.compareTo(BigDecimal.ONE) > 0) {
+                    if (bfCurrencyCode.equals(localCurrencyCode)) {
+                        baseFare = new BigDecimal((data[0].replaceAll("[a-zA-Z]", "").trim()));
+                    } else {
+                        if (!data[1].isEmpty()) {
+                            String bf = data[1].replaceAll("[a-zA-Z]", "");
+                            if (bf.isEmpty()) {
+                                bf = "0.00";
+                            }
+                            baseFare = new BigDecimal(bf);
+                        }
+                    }
+                }
+
+                tax = totalFare.subtract(baseFare);
+
+                if (tax.compareTo(BigDecimal.ONE) < 0) {
+                    tax = new BigDecimal("0.00");
+                }
+                
+                ticket.setBaseFare(baseFare);
+                ticket.setTax(tax);
+                ticket.setNetPurchaseFare(totalFare);
+                ticket.setCurrencyCode(bfCurrencyCode);
+            } else if (s.startsWith("KN-") && s.length() > 4) {
+
+                if (totalFare.compareTo(new BigDecimal("0.00")) == 1) {
+                    continue;
+                }
+                String[] data = AIRLineParser.parseKNLine(s);
+                localCurrencyCode = data[12].replaceAll("[^A-Z]", "");
+                bfCurrencyCode = data[0].replaceAll("[^A-Z]", "").substring(1);
+
+                totalFare = new BigDecimal(data[12].replaceAll("[a-zA-Z]", "").trim());
+                if (totalFare.compareTo(BigDecimal.ONE) > 0) {
+                    if (bfCurrencyCode.equals(localCurrencyCode)) {
+                        baseFare = new BigDecimal((data[0].replaceAll("[a-zA-Z]", "").trim()));
+                    } else {
+                        if (!data[1].isEmpty()) {
+                            String bf = data[1].replaceAll("[a-zA-Z]", "");
+                            if (bf.isEmpty()) {
+                                bf = "0.00";
+                            }
+                            baseFare = new BigDecimal(bf);
+                        }
+                    }
+                }
+
+                tax = totalFare.subtract(baseFare);
+
+                if (tax.compareTo(BigDecimal.ONE) < 0) {
+                    tax = new BigDecimal("0.00");
+                }
+                
+                ticket.setBaseFare(baseFare);
+                ticket.setTax(tax);
+                ticket.setNetPurchaseFare(totalFare);
+                ticket.setCurrencyCode(bfCurrencyCode);
+            } else if (s.startsWith("KS-") && s.length() > 4) {
+                if (totalFare.compareTo(new BigDecimal("0.00")) == 1) {
+                    continue;
+                }
+                //This block is only for thirdparty ticketing
+                String[] data = AIRLineParser.parseKSLine(s);
+
+                localCurrencyCode = data[12].replaceAll("[^A-Z]", "");
+                bfCurrencyCode = data[0].replaceAll("[^A-Z]", "").substring(1);
+
+                totalFare = new BigDecimal(data[12].replaceAll("[a-zA-Z]", "").trim());
+                if (totalFare.compareTo(BigDecimal.ONE) > 0) {
+                    if (bfCurrencyCode.equals(localCurrencyCode)) {
+                        baseFare = new BigDecimal((data[0].replaceAll("[a-zA-Z]", "").trim()));
+                    } else {
+                        if (!data[1].isEmpty()) {
+                            String bf = data[1].replaceAll("[a-zA-Z]", "");
+                            if (bf.isEmpty()) {
+                                bf = "0.00";
+                            }
+                            baseFare = new BigDecimal(bf);
+                        }
+                    }
+                }
+
+                tax = totalFare.subtract(baseFare);
+
+                if (tax.compareTo(BigDecimal.ONE) < 0) {
+                    tax = new BigDecimal("0.00");
+                }
+                
+                ticket.setBaseFare(baseFare);
+                ticket.setTax(tax);
+                ticket.setNetPurchaseFare(totalFare);
+                ticket.setCurrencyCode(bfCurrencyCode);
+                
+            }  else if (s.startsWith("FE")) {
                 String restrictions = s.substring(2);
                 ticket.setRestrictions(restrictions);
             } else if (s.startsWith("FO") && s.length() > 4) {

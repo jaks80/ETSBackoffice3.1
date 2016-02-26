@@ -1,5 +1,5 @@
 4. Ticketing OID and Sub agent OID break down.
 
-1. Email PW encryption
-2. Editing Other invoice
-3. Sale report filter by agent customer
+1. Do not make parent null when void Payment or Related docs.
+2. skyway October accoutns history null value in description.
+3.SkywayTue 01/09/2015 - Sat 31/10/2015 invoice history some segment missing

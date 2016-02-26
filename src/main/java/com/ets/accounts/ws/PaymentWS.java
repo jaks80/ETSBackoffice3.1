@@ -1,14 +1,18 @@
 package com.ets.accounts.ws;
 
-import com.ets.accountingdoc.domain.TicketingSalesAcDoc;
 import com.ets.accounts.model.*;
 import com.ets.accounts.domain.Payment;
 import com.ets.accounts.service.PaymentService;
+import com.ets.exception.ExcessPaymentException;
+import com.ets.exception.InvalidAmountException;
+import com.ets.exception.InvoiceNotFoundException;
+import com.ets.security.SecurityInterceptor;
+import com.ets.settings.domain.User;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -35,6 +39,21 @@ public class PaymentWS {
         return service.save(payment);
     }
 
+    @POST
+    @Path("/new_single_payment")
+    @RolesAllowed("GS")
+    public Payment newSinglePayment(
+            @QueryParam("amount") BigDecimal amount,
+            @QueryParam("remark") String remark,
+            @QueryParam("type") Enums.PaymentType type,
+            @QueryParam("invoiceId") Long invoiceId,
+            @QueryParam("saleType") Enums.SaleType saleType,
+            @HeaderParam("Authorization") String tokenizer) throws InvoiceNotFoundException, 
+                                            ExcessPaymentException, InvalidAmountException {
+        User user = SecurityInterceptor.getUser(tokenizer);
+        return service.createSignlePayment(amount, remark, type, invoiceId, saleType, user);
+    }
+    
     @PUT
     @Path("/void")
     @RolesAllowed("AD")    
@@ -73,8 +92,10 @@ public class PaymentWS {
     @POST
     @Path("/newctransfer")
     @RolesAllowed("GS")
-    public Response createCreditTransfer(CreditTransfer creditTransfer) {
-        service.createCreditTransfer(creditTransfer);
+    public Response createCreditTransfer(CreditTransfer creditTransfer, 
+            @HeaderParam("Authorization") String tokenizer) throws ExcessPaymentException {
+        User user = SecurityInterceptor.getUser(tokenizer);
+        service.createCreditTransfer(creditTransfer,user);
         return Response.status(200).build();
     }
 

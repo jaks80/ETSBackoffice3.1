@@ -2,7 +2,6 @@ package com.ets.accountingdoc_o.ws;
 
 import com.ets.accountingdoc_o.model.*;
 import com.ets.accountingdoc.domain.OtherSalesAcDoc;
-import com.ets.accountingdoc.model.InvoiceReport;
 import com.ets.accountingdoc_o.service.OSalesAcDocService;
 import com.ets.client.collection.Agents;
 import com.ets.client.collection.Customers;
