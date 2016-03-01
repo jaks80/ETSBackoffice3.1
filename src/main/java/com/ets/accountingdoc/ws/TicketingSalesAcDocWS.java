@@ -13,6 +13,7 @@ import com.ets.client.domain.Customer;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.security.PermitAll;
@@ -279,5 +280,15 @@ public class TicketingSalesAcDocWS {
         Customers customers = new Customers();
         customers.setList(customer_list);
         return customers;
+    }
+    
+    @GET
+    @Path("/quickbalance")
+    @RolesAllowed("GS")    
+    public String accountQuickBalance(@QueryParam("clienttype") Enums.ClientType clienttype, 
+            @QueryParam("clientid")Long clientid){
+    
+        BigDecimal balance = service.accountQuickBalance(clienttype, clientid);
+        return balance.toString();
     }
 }

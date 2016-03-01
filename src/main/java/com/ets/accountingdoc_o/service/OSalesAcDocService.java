@@ -32,13 +32,13 @@ public class OSalesAcDocService {
     private AccountingDocumentLineDAO lineDao;
 
     public void fixDB() {
-        
+
         List<OtherSalesAcDoc> docs = dao.findAllDocuments();
 
         for (OtherSalesAcDoc d : docs) {
             Set<AccountingDocumentLine> lines = d.getAccountingDocumentLines();
             if (lines.size() > 0) {
-                System.out.println("Id:"+d.getId()+" Qty: "+lines.size()+" Cat: "+lines.iterator().next().getOtherService().getCategory().getTitle());
+                System.out.println("Id:" + d.getId() + " Qty: " + lines.size() + " Cat: " + lines.iterator().next().getOtherService().getCategory().getTitle());
                 dao.update(lines.size(), lines.iterator().next().getOtherService().getCategory().getTitle(), d.getId());
             }
         }
@@ -399,4 +399,7 @@ public class OSalesAcDocService {
         return customers;
     }
 
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype, Long clientid) {
+        return dao.accountQuickBalance(clienttype, clientid);
+    }
 }

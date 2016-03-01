@@ -121,7 +121,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
 
         String clientcondition = "AND (:clientid IS null OR a.id = :clientid) ";
         String dateCondition = "";
-        
+
         if (from != null && to != null) {
             dateCondition = "AND d.docIssueDate BETWEEN :from AND :to ";
         }
@@ -135,7 +135,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "INNER JOIN agent a ON d.agentid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 "  
+                + "WHERE d.status=0 AND d.type=0 "
                 + dateCondition + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
@@ -147,7 +147,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN other_sales_acdoc d1 ON d1.reference = d.reference AND d1.status = 0 "
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "INNER JOIN customer a ON d.customerid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 "  
+                + "WHERE d.status=0 AND d.type=0 "
                 + dateCondition + clientcondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
@@ -160,7 +160,7 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
                 + "LEFT JOIN bo_user created_by ON d.created_by = created_by.id "
                 + "LEFT JOIN customer c ON d.customerid_fk = c.id "
                 + "LEFT JOIN agent a ON d.agentid_fk = a.id "
-                + "WHERE d.status=0 AND d.type=0 " + dateCondition 
+                + "WHERE d.status=0 AND d.type=0 " + dateCondition
                 + "GROUP BY d1.reference HAVING balance " + operator + "0 ORDER BY d.docIssueDate,d.id";
 
         Query query = null;
@@ -185,6 +185,35 @@ public class OtherSalesAcDocDAOImpl extends GenericDAOImpl<OtherSalesAcDoc, Long
         List results = query.list();
 
         return results;
+    }
+
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype, Long clientid) {
+
+        String sqlAgent = "SELECT SUM(t.documentedAmount) AS balance "
+                + "FROM other_sales_acdoc t "               
+                + "INNER JOIN agent a ON t.agentid_fk = a.id "
+                + "WHERE t.status=0 AND a.id = :clientid";
+        String sqlCustomer = "SELECT SUM(t.documentedAmount) AS balance "
+                + "FROM other_sales_acdoc t "                
+                + "INNER JOIN customer a ON t.customerid_fk = a.id "
+                + "WHERE t.status=0 AND a.id = :clientid";
+
+        Query query = null;
+
+        if (Enums.ClientType.AGENT.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlAgent);
+        } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlCustomer);
+
+        }
+
+        query.setParameter("clientid", clientid);
+        List results = query.list();
+        if (results.get(0) != null) {
+            return (BigDecimal) results.get(0);
+        } else {
+            return new BigDecimal("0.00");
+        }
     }
 
     /**

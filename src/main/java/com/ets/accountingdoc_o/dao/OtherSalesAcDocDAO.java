@@ -72,4 +72,6 @@ public interface OtherSalesAcDocDAO extends GenericDAO<OtherSalesAcDoc, Long>{
     public List<Agent> outstandingAgentsSQL(Enums.AcDocType acDocType);
     
     public List<Customer> outstandingCustomersSQL(Enums.AcDocType acDocType);
+    
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype,Long clientid);
 }

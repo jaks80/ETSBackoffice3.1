@@ -11,6 +11,7 @@ import com.ets.exception.ClientNotFoundException;
 import com.ets.productivity.model.ProductivityReport;
 import com.ets.util.DateUtil;
 import com.ets.util.Enums;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.security.PermitAll;
@@ -36,8 +37,8 @@ public class OtherSalesAcDocWS {
     @GET
     @Path("/fixdb")
     @PermitAll
-    public void updatePnrSegmentAndLeadPax(@QueryParam("dateStart") String dateStart,@QueryParam("dateEnd") String dateEnd) {
-       service.fixDB();
+    public void updatePnrSegmentAndLeadPax(@QueryParam("dateStart") String dateStart, @QueryParam("dateEnd") String dateEnd) {
+        service.fixDB();
     }
 
     @POST
@@ -58,7 +59,7 @@ public class OtherSalesAcDocWS {
     @GET
     @Path("/byref/{refferences}")
     @RolesAllowed("GS")
-    
+
     public InvoiceReportOther getReportByReferenceNumber(@PathParam("refferences") String refferences) {
         String[] ids_str = refferences.split(",");
         Long[] ids_long = new Long[ids_str.length];
@@ -135,7 +136,7 @@ public class OtherSalesAcDocWS {
 
     @GET
     @Path("/acdoc_report")
-    @RolesAllowed("SM")    
+    @RolesAllowed("SM")
     public InvoiceReportOther outstandingDocumentReport(
             @QueryParam("doctype") Enums.AcDocType doctype,
             @QueryParam("clienttype") Enums.ClientType clienttype,
@@ -244,4 +245,15 @@ public class OtherSalesAcDocWS {
         customers.setList(customer_list);
         return customers;
     }
+
+    @GET
+    @Path("/quickbalance")
+    @RolesAllowed("GS")
+    public String accountQuickBalance(@QueryParam("clienttype") Enums.ClientType clienttype,
+            @QueryParam("clientid") Long clientid) {
+
+        BigDecimal balance = service.accountQuickBalance(clienttype, clientid);
+        return balance.toString();
+    }
+
 }

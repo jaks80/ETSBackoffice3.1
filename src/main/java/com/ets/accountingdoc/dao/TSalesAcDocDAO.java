@@ -39,10 +39,6 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
 
     public TicketingSalesAcDoc voidTicketedDocument(TicketingSalesAcDoc doc);
 
-    //public List<String> outstandingAgentsName();
-
-    //public List<String> outstandingCusotmersName();
-
     /**
      * @deprecated 
      * @param acDocType
@@ -81,4 +77,6 @@ public interface TSalesAcDocDAO extends GenericDAO<TicketingSalesAcDoc, Long> {
     public Map<User, BigDecimal> userProductivityReport(Date dateStart, Date dateEnd);
 
     public Map<String, BigDecimal> allAgentOutstandingReport(Date dateStart, Date dateEnd);
+    
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype,Long clientid);
 }

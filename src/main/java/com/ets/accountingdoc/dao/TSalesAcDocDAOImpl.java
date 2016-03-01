@@ -658,6 +658,38 @@ public class TSalesAcDocDAOImpl extends GenericDAOImpl<TicketingSalesAcDoc, Long
     }
 
     @Override
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype,Long clientid) {
+
+        String sqlAgent = "SELECT SUM(t.documentedAmount) AS balance "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "INNER JOIN agent a ON pnr.agentid_fk = a.id "
+                + "WHERE t.status=0 AND a.id = :clientid";
+        String sqlCustomer = "SELECT SUM(t.documentedAmount) AS balance "
+                + "FROM tkt_sales_acdoc t "
+                + "LEFT JOIN pnr ON t.pnr_fk = pnr.id "
+                + "INNER JOIN customer a ON pnr.customerid_fk = a.id "
+                + "WHERE t.status=0 AND a.id = :clientid";
+
+        Query query = null;
+
+        if (Enums.ClientType.AGENT.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlAgent);
+        } else if (Enums.ClientType.CUSTOMER.equals(clienttype)) {
+            query = getSession().createSQLQuery(sqlCustomer);
+
+        }
+
+        query.setParameter("clientid", clientid);
+        List results = query.list();
+        if(results.get(0)!=null){
+         return (BigDecimal) results.get(0);
+        }else{
+         return new BigDecimal("0.00");
+        }    
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public TicketingSalesAcDoc getByTicketId(Long ticketId) {
         String hql = "select distinct a from TicketingSalesAcDoc as a "

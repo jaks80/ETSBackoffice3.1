@@ -683,4 +683,8 @@ public class TSalesAcDocService {
         List<Customer> customers = dao.outstandingCustomersSQL(acDocType);
         return customers;
     }
+    
+    public BigDecimal accountQuickBalance(Enums.ClientType clienttype,Long clientid){
+     return dao.accountQuickBalance(clienttype, clientid);
+    }
 }
